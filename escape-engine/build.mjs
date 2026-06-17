@@ -23,6 +23,7 @@ import { dirname, join } from 'node:path';
 
 const ROOT = dirname(new URL(import.meta.url).pathname);
 const ENGINE = readFileSync(join(ROOT, 'engine/index.html'), 'utf8');
+const ADMIN = readFileSync(join(ROOT, 'engine/admin.html'), 'utf8');
 const SW_TPL = readFileSync(join(ROOT, 'engine/sw.template.js'), 'utf8');
 const OUT = join(ROOT, 'docs');
 
@@ -47,6 +48,16 @@ function injectEmbeddedConfig(engineHtml, config) {
     return engineHtml;
   }
   return engineHtml.slice(0, start + marker.length) + JSON.stringify(config) + engineHtml.slice(end);
+}
+
+function injectAdminConfig(adminHtml, config) {
+  // Pré-charge l'admin avec la config du jeu (fallback si fetch échoue).
+  const marker = 'const DEFAULT_CONFIG = ';
+  const start = adminHtml.indexOf(marker);
+  const fmt = adminHtml.indexOf('const FORMATS');
+  if (start === -1 || fmt === -1) return adminHtml;
+  const semi = adminHtml.lastIndexOf(';', fmt);  // le ; qui clôt DEFAULT_CONFIG
+  return adminHtml.slice(0, start + marker.length) + JSON.stringify(config) + adminHtml.slice(semi);
 }
 
 function buildManifest(config) {
@@ -97,6 +108,8 @@ function buildGame(slug) {
 
   // index.html (moteur + fallback = config du jeu)
   writeFileSync(join(destDir, 'index.html'), injectEmbeddedConfig(ENGINE, config));
+  // admin.html (éditeur pré-chargé sur ce jeu)
+  writeFileSync(join(destDir, 'admin.html'), injectAdminConfig(ADMIN, config));
   // config.json
   writeFileSync(join(destDir, 'config.json'), JSON.stringify(config, null, 2));
   // manifest.json
@@ -121,13 +134,16 @@ function buildGame(slug) {
 
 function landingPage(games) {
   const cards = games.map(g => `
-    <a class="card" href="./${g.slug}/">
+    <div class="card">
       <div class="v">v${g.version}</div>
       <h2>${esc(g.name)}</h2>
       <div class="client">${esc(g.client || 'sans client')}</div>
       <div class="meta">${g.enigmas} énigmes</div>
-      <div class="go">Ouvrir →</div>
-    </a>`).join('');
+      <div class="links">
+        <a class="go" href="./${g.slug}/">Ouvrir le jeu →</a>
+        <a class="edit" href="./${g.slug}/admin.html">✎ Éditer</a>
+      </div>
+    </div>`).join('');
   return `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Escape Engine — Catalogue</title><style>
@@ -136,11 +152,14 @@ function landingPage(games) {
 .wrap{max-width:920px;margin:0 auto}.eyebrow{font-family:var(--mono);font-size:.62rem;letter-spacing:2px;text-transform:uppercase;color:#5a5a70;margin-bottom:8px}
 h1{font-size:1.7rem;margin-bottom:6px}.sub{color:var(--dim);margin-bottom:30px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:15px}
-.card{display:block;background:linear-gradient(165deg,#1b1b27,#15151f);border:1px solid var(--border);border-radius:14px;padding:20px;text-decoration:none;color:inherit;position:relative;transition:.18s}
+.card{display:block;background:linear-gradient(165deg,#1b1b27,#15151f);border:1px solid var(--border);border-radius:14px;padding:20px;color:inherit;position:relative;transition:.18s}
 .card:hover{border-color:var(--accent);transform:translateY(-2px)}
 .card .v{position:absolute;top:16px;right:16px;font-family:var(--mono);font-size:.6rem;color:var(--accent);border:1px solid rgba(0,224,208,.2);padding:2px 7px;border-radius:5px}
 .card h2{font-size:1.05rem;margin-bottom:5px;padding-right:42px}.card .client{font-family:var(--mono);font-size:.64rem;color:var(--dim);margin-bottom:16px}
-.card .meta{font-size:.74rem;color:var(--dim);margin-bottom:14px}.card .go{font-size:.78rem;color:var(--accent);font-weight:600}
+.card .meta{font-size:.74rem;color:var(--dim);margin-bottom:16px}
+.card .links{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid var(--border);padding-top:14px}
+.card .go{font-size:.82rem;color:var(--accent);font-weight:600;text-decoration:none}
+.card .edit{font-size:.74rem;color:var(--dim);text-decoration:none}.card .edit:hover{color:var(--accent)}
 </style></head><body><div class="wrap"><div class="eyebrow">Escape Engine</div>
 <h1>Catalogue des jeux</h1><div class="sub">${games.length} jeu(x) déployé(s).</div>
 <div class="grid">${cards}</div></div></body></html>`;
