@@ -1,0 +1,597 @@
+{
+  "schemaVersion": 1,
+  "meta": {
+    "id": "projet-1986",
+    "name": "PROJET 1986 : RÉACTIVATION",
+    "client": "",
+    "note": "Anniversaire 40 ans",
+    "version": 1,
+    "createdAt": "2026-06-17T09:50:30.589Z",
+    "updatedAt": "2026-06-17T09:50:30.589Z"
+  },
+  "branding": {
+    "docTitle": "PROJET 1986 : RÉACTIVATION",
+    "logo": "PROJET 1986",
+    "subtitle": "Système de réactivation",
+    "codename": "/// PROJET 1986 ///",
+    "classified": "/// CONFIDENTIEL ///",
+    "avatar": "icons/avatar.png"
+  },
+  "actBoundaries": [
+    0,
+    8,
+    16,
+    24,
+    32,
+    40
+  ],
+  "acts": [
+    {
+      "name": "INITIALISATION",
+      "subtitle": "Vérification d'identité"
+    },
+    {
+      "name": "CALIBRATION",
+      "subtitle": "Ajustement cognitifs"
+    },
+    {
+      "name": "ÉPREUVES",
+      "subtitle": "Résistance mentale"
+    },
+    {
+      "name": "ACTIVATION",
+      "subtitle": "Synchronisation sécurisée"
+    },
+    {
+      "name": "VALIDATION",
+      "subtitle": "Séquence finale"
+    }
+  ],
+  "enigmas": [
+    {
+      "id": 1,
+      "type": "Culture",
+      "format": "text",
+      "narrative": "SCAN BIOMÉTRIQUE > Vérification des centres d'intérêt >",
+      "question": "Même s'il n'est pas menuisier,\n il a quand même ciré beaucoup de parquets.\n\nMalgré ses nombreux talents,\n les briques n'ont jamais fait partie de ses habitudes.\n\nIl a été au sommet,\n mais tout le monde le souhaite à ses pieds.\n\nQui est-ce ?",
+      "answer": [
+        "jordan",
+        "michael jordan"
+      ],
+      "hint": "Sa Majesté de l'Air...",
+      "title": "Bricolage"
+    },
+    {
+      "id": 2,
+      "type": "Suite Logique",
+      "format": "text",
+      "narrative": "MODULE LOGIQUE > Séquence numérique incomplète détectée. Analyse requise.",
+      "question": "21  —  22  —  26  —  ?\n\nComplétez la suite.",
+      "answer": [
+        "5",
+        "05"
+      ],
+      "hint": "??/??/????",
+      "title": "La Suite Mystère"
+    },
+    {
+      "id": 3,
+      "type": "Culture",
+      "format": "text",
+      "narrative": "MODULE CULTUREL > Scan des références générationnelles > Décennie 1986.",
+      "question": "1986, tu pointais le bout de ton nez.\n\nLa même année il décide de prendre un peu de congés.\n\nVoiture de sport, casquette.\n\nEn une seule journée il vous a marqué pendant des années.\n\nQui est-ce ?",
+      "answer": [
+        "ferris bueller",
+        "ferris",
+        "bueller"
+      ],
+      "hint": "\"Life moves pretty fast...\" 🎬",
+      "title": "La légende"
+    },
+    {
+      "id": 4,
+      "type": "Culture",
+      "format": "text",
+      "narrative": "SCAN BIOMÉTRIQUE > Vérification des capacités élémentaires",
+      "question": "Grâce à moi, elle est belle !\n\nQui suis-je ?",
+      "answer": [
+        "b"
+      ],
+      "hint": "Grâce à moi, on est bon",
+      "title": "Belle"
+    },
+    {
+      "id": 5,
+      "type": "Interaction",
+      "format": "lightdetect",
+      "narrative": "ALERTE > Module optique compromis.",
+      "question": "Et la lumière fût...",
+      "answer": [
+        "ok"
+      ],
+      "hint": "Passez de l'obsurité à la lumière",
+      "title": "Et la lumière fut"
+    },
+    {
+      "id": 6,
+      "type": "Nombre",
+      "format": "text",
+      "narrative": "MODULE logique > Sauras-tu révéler les bons nombres.",
+      "question": "Quels sont les trois nombres positifs qui donnent le même résultat quand on les multiplie et quand on les additionne ensemble ?",
+      "answer": [
+        "1,2,3"
+      ],
+      "hint": "C'est mort... à toi de trouver !",
+      "title": "+ & x"
+    },
+    {
+      "id": 7,
+      "type": "Histoire",
+      "format": "text",
+      "narrative": "SCAN BIOMÉTRIQUE > Vérification des centres d'intérêt.",
+      "question": "Je peux me faire attendre.\n\nMais en général je finis par pousser.\n\nJe suis moins fournie que ton espoir de m'avoir.\n\nQui suis-je ?",
+      "answer": [
+        "barbe"
+      ],
+      "hint": "C'est mort ! A toi de trouver !",
+      "title": "Hope"
+    },
+    {
+      "id": 8,
+      "type": "Audio Père Fouras",
+      "format": "audio",
+      "audioId": "fouras-audio",
+      "hasWave": true,
+      "hasSpeedControl": true,
+      "hasDownload": true,
+      "narrative": "INTERCEPTION > Message audio capté. Le Père Fouras a parlé. Décodage nécessaire.",
+      "question": "Trouvez la réponse à l'énigme.",
+      "answer": [
+        "pas",
+        "un pas"
+      ],
+      "hint": "... de géant",
+      "title": "Transmission Brouillée"
+    },
+    {
+      "id": 9,
+      "type": "Ieps",
+      "format": "text",
+      "narrative": "MODULE logique > Vérification des capacités d'analyse.",
+      "image": "icons/pieds.png",
+      "question": "Combien de pieds voyez-vous ?",
+      "answer": [
+        "12"
+      ],
+      "hint": "La tête en bas",
+      "title": "Ieps"
+    },
+    {
+      "id": 10,
+      "type": "Suite gourmande",
+      "format": "text",
+      "narrative": "MODULE LOGIQUE > Séquence numérique incomplète détectée. Analyse requise.",
+      "question": "Trouvez le résultat :\n\n🍟  -  8  -  9  -  1\n1  -  9  -🍔-  1\n0  -  2  -  0  -  2\n2  -  0  -  1  -  🍪\n🍕-  2  -  0  -  2\n\n🍔  x  🍕  +  🍪 - 2 x 🍟 = ?",
+      "answer": [
+        "40"
+      ],
+      "hint": "Vois-tu les années ?",
+      "title": "La Faim"
+    },
+    {
+      "id": 11,
+      "type": "Devinette",
+      "format": "text",
+      "narrative": "MODULE LOGIQUE > Niveau 2 > Capacité de déduction sous pression.",
+      "question": "Je suis plus puissant que Dieu.\n\nJe suis plus méchant que le diable.\n\nLe pauvre en possède.\n\nLe riche en manque.\n\nEt si vous me mangez, vous mourrez.",
+      "answer": [
+        "rien"
+      ],
+      "hint": "Tout",
+      "title": "L'essentiel"
+    },
+    {
+      "id": 12,
+      "type": "Devinette",
+      "format": "text",
+      "narrative": "MODULE ANALYTIQUE > Épreuve de raisonnement. Concentration maximale requise.",
+      "question": "Tu es dans un bus qui part avec 6 passagers dont 4 ont les yeux bleus et 2 ont les yeux verts\n\nÀ l'arrêt suivant, 2 montent et 3 descendent.\nAu suivant, 5 descendent et 4 montent.\n\nDe quelle couleur sont les yeux du chauffeur ?",
+      "answer": [
+        "noir",
+        "marron",
+        "noirs",
+        "marrons",
+        "brun",
+        "bruns"
+      ],
+      "hint": "QUI conduit le bus ? 👀",
+      "title": "Le Piège du Bus"
+    },
+    {
+      "id": 13,
+      "type": "Culture",
+      "format": "text",
+      "narrative": "MODULE CULTUREL > Scan local > Identité.",
+      "question": "L'amiral mort flotta dans ma chair pour rentrer au port, depuis, mon surnom a le goût du sang.\n\n Colomb baptisa une de mes mères du nom d'une vierge espagnole\n\nJe naît du berceau de la terre, et meurs en gorge d'homme.\n\nQui suis-je ?",
+      "answer": [
+        "rhum",
+        "le rhum",
+        "rum"
+      ],
+      "hint": "Tchin tchin",
+      "title": "L'Or"
+    },
+    {
+      "id": 14,
+      "type": "0101",
+      "format": "text",
+      "narrative": "MODULE PROGRAMMATION > Un code a été dissimulé sauras-tu le révéler.",
+      "question": "01010100 01110010 01101001 01110000 01101100 01100101 00100000 01110011 01100001 01110101 01110100",
+      "answer": [
+        "triple saut"
+      ],
+      "hint": "3 fois tu voleras",
+      "title": "La machine"
+    },
+    {
+      "id": 15,
+      "type": "Devinette",
+      "format": "text",
+      "narrative": "MODULE LOGIQUE > Niveau 2 > Capacité de déduction sous pression.",
+      "iframe": "https://scape.enepe.fr/ressources/cesar/index2.html",
+      "question": "🥑 - AVOCAT - 🥑\n\nV'SWZYBDKXD M'OCD ZKC VK MREDO M'OCD V'KDDBBSCCKQO",
+      "answer": [
+        "L'IMPORTANT C'EST PAS LA CHUTE, C'EST L'ATTERRISSAGE"
+      ],
+      "hint": "A vo cat",
+      "title": "Avocat"
+    },
+    {
+      "id": 16,
+      "type": "Position GPS",
+      "format": "gps",
+      "narrative": "MODULE GPS > Signal crypté détecté. Déplacement physique requis pour décoder.",
+      "question": "Un signal a été localisé. Déplacez-vous jusqu'à la zone cible pour décrypter le message secret.",
+      "gpsTarget": {
+        "lat": 16.199749,
+        "lng": -61.467685
+      },
+      "gpsRadius": 35,
+      "gpsSecret": "OMBRE",
+      "answer": [
+        "ombre",
+        "l'ombre"
+      ],
+      "hint": "Approchez-vous du point cible... le radar vous guide !",
+      "title": "Signal Localisé"
+    },
+    {
+      "id": 17,
+      "type": "Culture",
+      "format": "text",
+      "narrative": "MODULE CULTURE > Vérification des centres d'intérêt.",
+      "question": "Je suis né muet mais après 40 ans,\n\nj'ai enfin fini par parler.\n\nQui suis-je ?",
+      "answer": [
+        "cinéma"
+      ],
+      "hint": "Des frères à Hollywood",
+      "title": "Parole"
+    },
+    {
+      "id": 18,
+      "type": "Culture",
+      "format": "text",
+      "narrative": "SCAN BIOMÉTRIQUE > Vérification des capacités d'analyse.",
+      "question": "Je suis entre 188 et 190,\n\n mais je ne suis pas 189.\n\nQui suis-je ?",
+      "answer": [
+        "et"
+      ],
+      "hint": "Littéralement entre",
+      "title": "188-190"
+    },
+    {
+      "id": 19,
+      "type": "Faux Bug",
+      "format": "fakebug",
+      "narrative": "",
+      "question": "",
+      "answer": [
+        "ok"
+      ],
+      "hint": "Patience... le système va se rétablir 😏",
+      "title": "/// ERREUR SYSTÈME ///"
+    },
+    {
+      "id": 20,
+      "type": "Histoire",
+      "format": "text",
+      "narrative": "SCAN BIOMÉTRIQUE > Vérification des centres d'intérêt",
+      "question": "On fait appel à moi les jours de pluie,\n\nMais ce jour-là, j'étais au mauvais endroit.\n\nJe suis parfois monté, puis démonté...\n\nQui suis-je ?",
+      "answer": [
+        "essuie glaces,essuie-glaces"
+      ],
+      "hint": "",
+      "title": "Humide"
+    },
+    {
+      "id": 21,
+      "type": "Rébus",
+      "format": "rebus",
+      "narrative": "MODULE DÉCRYPTAGE > Séquence visuelle détectée. Interprétation requise.",
+      "question": "Déchiffrez ce rébus :",
+      "rebusItems": [
+        "🐏",
+        "➕",
+        "♨️"
+      ],
+      "rebusHint": "Animal + Sensation",
+      "answer": [
+        "ramothe",
+        "ram hot",
+        "ramotte"
+      ],
+      "hint": "C'est mort ! A toi de jouer !",
+      "title": "Symboles Cachés"
+    },
+    {
+      "id": 22,
+      "type": "Mathématiques",
+      "format": "text",
+      "narrative": "MODULE CALCUL > Équation à résoudre. Précision requise.",
+      "question": "J'ajoute 2 au produit de deux nombres consécutifs supérieurs à 0 et j'obtiens 14.\n\nQuels sont ces deux nombres ?\n(Répondez sous la forme : X et Y)",
+      "answer": [
+        "3 et 4",
+        "3et4",
+        "3,4",
+        "3 4"
+      ],
+      "hint": "? × (? + 1) + 2 = 14 → ? × (? + 1) = 12",
+      "title": "L'Équation"
+    },
+    {
+      "id": 23,
+      "type": "Devinette",
+      "format": "text",
+      "narrative": "MODULE LOGIQUE > Niveau 2 > Capacité de déduction sous pression.",
+      "question": "Un homme regarde un portrait et dit :\n\n« Je n'ai ni frère ni sœur, mais le père de cet homme est le fils de mon père. »\n\nQui est la personne sur le portrait ?",
+      "answer": [
+        "son fils",
+        "fils",
+        "mon fils"
+      ],
+      "hint": "C'est mort ! A toi de trouver",
+      "title": "Le Portrait"
+    },
+    {
+      "id": 24,
+      "type": "Position GPS",
+      "format": "gps",
+      "narrative": "MODULE GPS > Signal crypté détecté. Déplacement physique requis pour décoder.",
+      "question": "Un signal a été localisé. Déplacez-vous jusqu'à la zone cible pour décrypter le message secret.",
+      "gpsTarget": {
+        "lat": 16.199749,
+        "lng": -61.467685
+      },
+      "gpsRadius": 500,
+      "gpsSecret": "OMBRE",
+      "answer": [
+        "ombre",
+        "l'ombre"
+      ],
+      "hint": "Approchez-vous du point cible... le radar vous guide !",
+      "title": "Signal Localisé"
+    },
+    {
+      "id": 25,
+      "type": "Géoguessing",
+      "format": "text",
+      "narrative": "MODULE GEOGRAPHIQUE > Capacité de repérage en mission.",
+      "image": "icons/lisbonne.png",
+      "iframe": "https://lockee.fr/o/EmWCssUf?nobg?noft",
+      "answer": [
+        "woosah"
+      ],
+      "hint": "Ch'est pas Ch'an Franchichchau",
+      "title": "Guess where"
+    },
+    {
+      "id": 26,
+      "type": "Scan NFC",
+      "format": "nfc",
+      "narrative": "MODULE NFC > Tag détecté à proximité. Approchez votre appareil.",
+      "question": "<!> Alerte sécurité <!> \n\n Scanne de vérification obligatoire",
+      "nfcTagId": "04:EE:01:0A:30:1F:94",
+      "answer": [
+        "ok"
+      ],
+      "hint": "Utiliser votre mobile scanner pour detecter le signal",
+      "title": "Signal Fantôme"
+    },
+    {
+      "id": 27,
+      "type": "Devinette",
+      "format": "text",
+      "narrative": "MODULE CULTURE > Pensée abstraite requise.",
+      "question": "Je suis toujours devant toi,\n\nMais tu ne peux jamais me rattraper.\n\nPlus tu avances, plus j'avance aussi.\n\nQui suis-je ?",
+      "answer": [
+        "futur",
+        "le futur",
+        "l'avenir",
+        "avenir",
+        "demain"
+      ],
+      "hint": "Nombreux veulent y voir, d'autres veulent en revenir",
+      "title": "L'Insaisissable"
+    },
+    {
+      "id": 28,
+      "type": "Cadena",
+      "format": "text",
+      "narrative": "MODULE ACTION > Niveau 2 > Capacité de manipulation prolongée.",
+      "question": "Derrière chaque agent se trouve la clé... \n\n à toi de la trouver pour la faire parler.",
+      "answer": [
+        "Bas les pattes tête de poule !"
+      ],
+      "hint": "Regarde derrière toi...",
+      "title": "Brain"
+    },
+    {
+      "id": 29,
+      "type": "Souvenir",
+      "format": "text",
+      "narrative": "MODULE MEMOIRE > Niveau 3 > Capacité de mémorisation avancée.",
+      "image": "icons/jetpack.gif",
+      "question": "Agent si vous voulez poursuivre la mission, separez les éléments de votre réponse par ''-''",
+      "answer": [
+        "L1-L2-R1-R2-Haut-Bas-Gauche-Droite-L1-L2-R1-R2-Haut-Bas-Gauche-Droite"
+      ],
+      "hint": "cheat code",
+      "title": "Carl Johnson"
+    },
+    {
+      "id": 30,
+      "type": "Cadena",
+      "format": "text",
+      "narrative": "MODULE LOGIQUE > Un code a été dissimulé, sauras-tu le révéler.",
+      "image2": "icons/cadenacryptex.png",
+      "iframe2": "https://lockee.fr/o/iR33Tu2z?nobg?noft",
+      "question": "",
+      "answer": [
+        "Ace ventura"
+      ],
+      "hint": "C'est mort ! A toi de trouver !",
+      "title": "Le cadena"
+    },
+    {
+      "id": 31,
+      "type": "Code",
+      "format": "keypad",
+      "narrative": "MODULE SÉCURITÉ > Code d'accès requis. 4 chiffres. Aucune erreur tolérée.",
+      "question": "Entrez le code d'activation.",
+      "answer": [
+        "3827"
+      ],
+      "hint": "🔊🔊🔊🔊",
+      "title": "Code d'Activation"
+    },
+    {
+      "id": 32,
+      "type": "Vision Secrète",
+      "format": "text",
+      "narrative": "MODULE SOUVENIR > Une bobine temporelle a été dissimulée.",
+      "question": "Trouvez la bobine pour trouver le lieu secret.",
+      "answer": [
+        "le loft"
+      ],
+      "hint": "OK bobine temporelle, c'est peut être un grand mot... on va dire étiquette",
+      "title": "Bobine"
+    },
+    {
+      "id": 33,
+      "type": "Géoguessing",
+      "format": "text",
+      "narrative": "MODULE GEOGRAPHIQUE > Capacité de repérage en mission.",
+      "iframe": "https://lockee.fr/o/YeowD45g?nobg?noft",
+      "question": "Je suis né entre deux mondes instables,\nNi tout à fait terre, ni tout à fait mer.NOn me croit immobile, mais je change sans cesse,\nCar ceux qui m’entourent avancent et reculent sans fin.\nJ’ai défié le temps, les assauts et les hommes,\nGrimpant vers le ciel comme une prière de pierre.\nRois, pèlerins et curieux m’ont convoité,\nMais seuls les patients savent quand je me révèle.\nQui suis-je ?",
+      "answer": [
+        "un type fier, un type fort, yul brenner, junior bevil"
+      ],
+      "hint": "C'est mort ! A toi de trouver !???",
+      "title": "Guess where"
+    },
+    {
+      "id": 34,
+      "type": "Labyrinthe",
+      "format": "text",
+      "narrative": "MODULE calcul > Un code a été dissimulé sur un document physique. Seul le chemin du labyrinthe peut le révéler.",
+      "image": "icons/labyrinthe_opp_c.png",
+      "question": "",
+      "answer": [
+        "FY57X?N3PML90R6ID"
+      ],
+      "hint": "F----[...]----D",
+      "title": "La caltoch"
+    },
+    {
+      "id": 35,
+      "type": "Cadena",
+      "format": "text",
+      "narrative": "MODULE LOGIQUE > Niveau 2 > Capacité de déduction sous pression.",
+      "iframe": "https://lockee.fr/o/a3ds9RFX?nobg?noft",
+      "question": "A vous tous vous atteignez 288",
+      "answer": [
+        "le prince de bel air"
+      ],
+      "hint": "288 ça fait vieux !",
+      "title": "Click"
+    },
+    {
+      "id": 36,
+      "type": "Géoguessing",
+      "format": "text",
+      "narrative": "MODULE GEOGRAPHIQUE > Capacité de repérage en mission.",
+      "image": "icons/nimes.png",
+      "iframe": "https://lockee.fr/o/gqcbvbxg?nobg?noft",
+      "answer": [
+        "fais dodo"
+      ],
+      "hint": "Les arènes de ",
+      "title": "Guess where"
+    },
+    {
+      "id": 37,
+      "type": "Mots mélangés",
+      "format": "text",
+      "narrative": "MODULE LOGIQUE > Niveau 2 > Capacité de déduction sous pression.",
+      "iframe": "https://ladigitale.dev/digilock/#/l/69dbf54b65713?vue=apercu",
+      "question": "Cherche et trouve",
+      "answer": [
+        "sherman"
+      ],
+      "hint": "C'est mort ! A toi de trouver !",
+      "title": "Trouvé"
+    },
+    {
+      "id": 38,
+      "type": "Logique",
+      "format": "text",
+      "narrative": "MODULE ACTION > Niveau 2 > Capacité de manipulation prolongée.",
+      "iframe": "https://lockee.fr/o/4Y0EUfoe?nobg?noft",
+      "question": "???",
+      "answer": [
+        "Trinity"
+      ],
+      "hint": "Blanc b...",
+      "title": "Box"
+    },
+    {
+      "id": 39,
+      "type": "Piano",
+      "format": "audio",
+      "audioId": "melody-audio",
+      "hasWave": false,
+      "hasSpeedControl": false,
+      "hasDownload": false,
+      "narrative": "MODULE LOGIQUE > Niveau 2 > Capacité de déduction sous pression.",
+      "iframe": "https://lockee.fr/o/NEfc604n?nobg&noft",
+      "question": "A toi de jouer l'artiste !",
+      "answer": [
+        "stephen"
+      ],
+      "hint": "C'est mort ! A toi de trouver !",
+      "title": "Lalala"
+    },
+    {
+      "id": 40,
+      "type": "Puzzle Final",
+      "format": "puzzle",
+      "narrative": "SÉQUENCE FINALE > Reconstituez l'image pour déverrouiller la récompense.",
+      "question": "Remettez les pièces dans l'ordre pour révéler le message final.\n\nAppuyez sur une pièce adjacente à l'espace vide pour la déplacer.",
+      "answer": [
+        "ok"
+      ],
+      "hint": "Déplacez les pièces une à une vers l'espace vide, comme un taquin.",
+      "title": "La Révélation"
+    }
+  ]
+}
