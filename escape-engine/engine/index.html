@@ -1,0 +1,3267 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0f">
+<title>PROJET 1986 : RÉACTIVATION</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/avatar.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/avatar.png">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg-deep: #0a0a0f;
+  --bg-panel: #12121a;
+  --bg-card: #1a1a28;
+  --accent: #00f0ff;
+  --accent-dim: #00f0ff33;
+  --accent-glow: #00f0ff88;
+  --warn: #ff3366;
+  --warn-dim: #ff336633;
+  --success: #00ff88;
+  --success-dim: #00ff8833;
+  --gold: #ffd700;
+  --text: #e0e8f0;
+  --text-dim: #667788;
+  --font-mono: 'Share Tech Mono', monospace;
+  --font-display: 'Orbitron', sans-serif;
+  --font-body: 'Rajdhani', sans-serif;
+}
+html, body {
+  height: 100%; width: 100%;
+  background: var(--bg-deep);
+  color: var(--text);
+  font-family: var(--font-body);
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+/* ═══════════ ANIMATIONS ═══════════ */
+@keyframes glitch {
+  0%, 100% { transform: translate(0); filter: none; }
+  20% { transform: translate(-2px, 1px); filter: hue-rotate(90deg); }
+  40% { transform: translate(2px, -1px); filter: hue-rotate(-90deg); }
+  60% { transform: translate(-1px, -2px); }
+  80% { transform: translate(1px, 2px); filter: hue-rotate(180deg); }
+}
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+@keyframes pulse { 0%,100% { opacity: .6; } 50% { opacity: 1; } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  75% { transform: translateX(8px); }
+}
+@keyframes bootFlicker {
+  0% { opacity: 0; } 5% { opacity: 1; } 10% { opacity: 0; }
+  15% { opacity: 1; } 50% { opacity: 1; } 55% { opacity: 0; }
+  60% { opacity: 1; } 100% { opacity: 1; }
+}
+@keyframes successPulse {
+  0% { box-shadow: 0 0 0 0 var(--success); }
+  70% { box-shadow: 0 0 0 20px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+@keyframes borderGlow {
+  0%,100% { border-color: var(--accent-dim); }
+  50% { border-color: var(--accent); }
+}
+@keyframes torchPulse {
+  0%,100% { box-shadow: 0 0 40px 10px rgba(255,220,100,.3), inset 0 0 30px rgba(255,220,100,.1); }
+  50% { box-shadow: 0 0 80px 20px rgba(255,220,100,.5), inset 0 0 60px rgba(255,220,100,.2); }
+}
+@keyframes torchIconBounce {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+/* ═══════════ SCREENS ═══════════ */
+.screen {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  opacity: 0; pointer-events: none;
+  transition: opacity .5s ease;
+  overflow-y: auto; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+.screen.active { opacity: 1; pointer-events: all; }
+.screen::after {
+  content: '';
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(transparent, var(--accent-dim), transparent);
+  animation: scanline 4s linear infinite;
+  pointer-events: none; z-index: 100; opacity: .3;
+}
+
+ 
+  
+/* ═══════════ BOOT SCREEN ═══════════ */
+#boot-screen {
+  justify-content: center; align-items: center;
+  background: var(--bg-deep); padding: 30px;
+}
+#boot-screen .logo {
+  font-family: var(--font-display);
+  font-size: 1.8rem; font-weight: 900;
+  letter-spacing: 6px; color: var(--accent);
+  text-shadow: 0 0 30px var(--accent-glow), 0 0 60px var(--accent-dim);
+  text-align: center; animation: bootFlicker 2s ease-in-out;
+  margin-bottom: 8px;
+}
+#boot-screen .subtitle {
+  font-family: var(--font-mono);
+  font-size: .75rem; color: var(--text-dim);
+  letter-spacing: 4px; text-transform: uppercase;
+  text-align: center; margin-bottom: 50px;
+}
+#boot-log {
+  font-family: var(--font-mono);
+  font-size: .7rem; color: var(--accent);
+  line-height: 1.8; max-width: 360px; width: 100%;
+  min-height: 180px;
+}
+#boot-log .line { opacity: 0; animation: fadeIn .3s forwards; }
+#boot-log .line.ok::after { content: ' [OK]'; color: var(--success); }
+#boot-log .line.warn::after { content: ' [!]'; color: var(--warn); }
+#boot-buttons {
+  margin-top: 30px;
+}
+
+/* ═══════════ INTRO SCREEN ═══════════ */
+#intro-screen {
+  justify-content: center; align-items: center;
+  padding: 40px 24px; text-align: center;
+  background: radial-gradient(ellipse at center, #111122 0%, var(--bg-deep) 70%);
+}
+#intro-screen .classified {
+  font-family: var(--font-display);
+  font-size: .65rem; letter-spacing: 6px; color: var(--warn);
+  border: 1px solid var(--warn-dim);
+  padding: 6px 18px; display: inline-block;
+  margin-bottom: 30px; text-transform: uppercase;
+}
+#intro-screen .brief {
+  font-family: var(--font-body);
+  font-size: 1rem; line-height: 1.8; color: var(--text);
+  max-width: 340px; margin: 0 auto 40px; font-weight: 300;
+}
+#intro-screen .brief strong { color: var(--accent); font-weight: 600; }
+
+/* ═══════════ HUB SCREEN ═══════════ */
+#hub-screen { background: var(--bg-deep); }
+.hub-header { padding: 20px 20px 0; text-align: center; }
+.hub-header .codename {
+  font-family: var(--font-display);
+  font-size: .65rem; letter-spacing: 4px;
+  color: var(--accent); opacity: .7;
+}
+.hub-header .progress-label {
+  font-family: var(--font-mono);
+  font-size: .7rem; color: var(--text-dim); margin-top: 12px;
+}
+.progress-bar-wrap {
+  margin: 8px 20px 0; height: 3px;
+  background: var(--bg-card); border-radius: 2px; overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--success));
+  transition: width .8s cubic-bezier(.4,0,.2,1);
+  border-radius: 2px; box-shadow: 0 0 10px var(--accent-glow);
+}
+.acts-container { padding: 20px; flex: 1; }
+.act-group { margin-bottom: 24px; }
+
+.act-title {
+  font-family: var(--font-display);
+  font-size: .6rem; letter-spacing: 3px; color: var(--text-dim);
+  text-transform: uppercase; margin-bottom: 10px; padding-left: 2px;
+  display: flex; align-items: center; gap: 8px;
+}
+.act-title .act-line { flex: 1; height: 1px; background: linear-gradient(90deg, var(--text-dim), transparent); }
+.act-title.locked { color: #333; }
+.act-title.completed { color: var(--success); }
+
+.act-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.enigma-card {
+  background: var(--bg-card);
+  border: 1px solid #222233; border-radius: 12px;
+  min-height: 60px;
+  padding: 5px 5px; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 5px;
+  cursor: pointer; transition: all .3s ease;
+  position: relative; overflow: hidden;
+}
+.enigma-card::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px; background: var(--text-dim); transition: background .3s;
+}
+.enigma-card.current::before { background: var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
+.enigma-card.completed::before { background: var(--success); }
+.enigma-card.locked { opacity: .35; pointer-events: none; }
+.enigma-card.current { border-color: var(--accent-dim); }
+.enigma-card:active:not(.locked) { transform: scale(.98); }
+.enigma-num {
+  font-family: var(--font-display);
+  font-size: .7rem; font-weight: 700;
+  width: 26px; height: 26px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; background: var(--bg-panel);
+  color: var(--text-dim); flex-shrink: 0;
+}
+.enigma-card.current .enigma-num { color: var(--accent); border: 1px solid var(--accent-dim); }
+.enigma-card.completed .enigma-num { color: var(--success); border: 1px solid var(--success-dim); }
+.enigma-card.completed .enigma-num::after { content: '✓'; }
+.enigma-card.completed .enigma-num span { display: none; }
+.enigma-info { flex: 1; min-width: 0; }
+.enigma-type {
+  font-family: var(--font-mono);
+  font-size: .55rem; color: var(--text-dim);
+  letter-spacing: 1px; text-transform: uppercase; margin-bottom: 2px;
+}
+.enigma-title-text { font-size: .9rem; font-weight: 500; color: var(--text); }
+.enigma-card.locked .enigma-title-text { color: #444; }
+.enigma-card.locked .enigma-type { color: #333; }
+.enigma-arrow { font-size: 1rem; color: var(--text-dim); }
+.enigma-card.current .enigma-arrow { color: var(--accent); }
+.enigma-card.completed .enigma-arrow { color: var(--success); }
+
+/* ═══════════ ENIGMA SCREEN ═══════════ */
+#enigma-screen { background: var(--bg-deep); }
+.enigma-header {
+  padding: 16px 20px;
+  display: flex; align-items: center; gap: 12px;
+  border-bottom: 1px solid #1a1a2a; flex-shrink: 0;
+}
+.back-btn {
+  background: none; border: 1px solid #333;
+  color: var(--text-dim);
+  width: 36px; height: 36px; border-radius: 8px;
+  font-size: 1.1rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.back-btn:active { background: var(--bg-card); }
+.enigma-header-info { flex: 1; }
+.enigma-header-num {
+  font-family: var(--font-display);
+  font-size: .55rem; color: var(--accent); letter-spacing: 3px;
+}
+.enigma-header-type {
+  font-family: var(--font-mono);
+  font-size: .6rem; color: var(--text-dim); letter-spacing: 1px;
+}
+.hint-btn {
+  background: none; border: 1px solid var(--warn-dim);
+  color: var(--warn); font-family: var(--font-mono);
+  font-size: .6rem; padding: 6px 12px;
+  border-radius: 6px; cursor: pointer; letter-spacing: 1px;
+}
+.hint-btn:active { background: var(--warn-dim); }
+
+.enigma-body {
+  flex: 1; padding: 24px 20px;
+  display: flex; flex-direction: column; gap: 20px;
+  overflow-y: auto;
+}
+.enigma-narrative {
+  font-family: var(--font-mono);
+  font-size: .7rem; color: var(--accent); line-height: 1.6;
+  padding: 12px 16px; background: var(--accent-dim);
+  border-left: 2px solid var(--accent);
+  border-radius: 0 8px 8px 0; opacity: .9;
+}
+.enigma-question {
+  font-size: 1.1rem; font-weight: 400;
+  line-height: 1.7; color: var(--text); white-space: pre-line;
+}
+
+/* Solved banner */
+.solved-banner {
+  background: var(--success-dim);
+  border: 1px solid var(--success);
+  border-radius: 10px; padding: 14px 18px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: .8rem; color: var(--success);
+  letter-spacing: 2px;
+}
+.solved-answer {
+  margin-top: 6px;
+  font-family: var(--font-display);
+  font-size: 1rem; color: var(--text);
+  letter-spacing: 2px;
+}
+
+/* Answer section */
+.answer-section { margin-top: auto; padding-top: 16px; flex-shrink: 0; }
+.answer-input-wrap { display: flex; gap: 8px; }
+.answer-input {
+  flex: 1; background: var(--bg-card);
+  border: 1px solid #333; color: var(--text);
+  font-family: var(--font-body); font-size: 1rem;
+  padding: 14px 16px; border-radius: 10px; outline: none;
+  transition: border-color .3s;
+}
+.answer-input:focus { border-color: var(--accent); }
+.answer-input::placeholder { color: #444; }
+.submit-btn {
+  background: var(--accent); border: none;
+  color: var(--bg-deep); font-family: var(--font-display);
+  font-size: .7rem; font-weight: 700; letter-spacing: 2px;
+  padding: 14px 20px; border-radius: 10px;
+  cursor: pointer; white-space: nowrap;
+}
+.submit-btn:active { transform: scale(.95); }
+.feedback-msg {
+  font-family: var(--font-mono); font-size: .8rem;
+  text-align: center; padding: 10px; border-radius: 8px; display: none;
+  margin-bottom: 8px;
+}
+.feedback-msg.error { display: block; color: var(--warn); background: var(--warn-dim); animation: shake .4s ease; }
+.feedback-msg.success { display: block; color: var(--success); background: var(--success-dim); animation: successPulse .6s ease; }
+
+/* ═══════════ KEYPAD ═══════════ */
+.keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 280px; margin: 0 auto; }
+.keypad-display {
+  grid-column: 1/-1; background: var(--bg-panel);
+  border: 1px solid #333; border-radius: 10px;
+  padding: 16px; font-family: var(--font-display);
+  font-size: 2rem; letter-spacing: 12px;
+  text-align: center; color: var(--accent);
+  min-height: 60px; display: flex; align-items: center; justify-content: center;
+}
+.keypad-display .digit { display: inline-block; width: 24px; text-align: center; }
+.keypad-display .digit.empty { border-bottom: 2px solid #333; margin: 0 4px; }
+.key-btn {
+  background: var(--bg-card); border: 1px solid #2a2a3a;
+  color: var(--text); font-family: var(--font-display);
+  font-size: 1.3rem; font-weight: 700; padding: 16px;
+  border-radius: 10px; cursor: pointer; transition: all .15s;
+}
+.key-btn:active { background: var(--accent-dim); transform: scale(.95); }
+.key-btn.action { font-size: .7rem; letter-spacing: 1px; }
+.key-btn.submit-key { background: var(--accent); color: var(--bg-deep); border-color: var(--accent); }
+
+/* ═══════════ PUZZLE ═══════════ */
+.puzzle-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 3px; max-width: 320px; margin: 0 auto;
+  aspect-ratio: 1; background: var(--bg-panel);
+  border-radius: 12px; padding: 3px; overflow: hidden;
+}
+.puzzle-piece {
+  aspect-ratio: 1; background: var(--accent-dim);
+  border-radius: 4px; cursor: grab; transition: transform .2s;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-size: 1.4rem;
+  font-weight: 700; color: var(--accent); border: 1px solid #2a2a3a;
+}
+.puzzle-piece:active { transform: scale(.9); cursor: grabbing; }
+.puzzle-piece.empty { background: transparent; border: 1px dashed #333; cursor: default; }
+.puzzle-piece.correct { background: var(--success-dim); color: var(--success); border-color: var(--success-dim); }
+
+/* ═══════════ TORCH ═══════════ */
+.torch-module {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 20px;
+  text-align: center; padding: 10px;
+}
+.torch-zone {
+  width: 180px; height: 180px;
+  border: 2px solid #333;
+  border-radius: 50%;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 12px; cursor: pointer;
+  transition: all .4s ease;
+  background: var(--bg-card);
+  position: relative;
+}
+.torch-zone .torch-icon {
+  font-size: 3.5rem;
+  transition: transform .3s;
+}
+.torch-zone .torch-label {
+  font-family: var(--font-mono);
+  font-size: .65rem; color: var(--text-dim);
+  letter-spacing: 2px; text-transform: uppercase;
+}
+.torch-zone.active {
+  border-color: var(--gold);
+  background: radial-gradient(circle, rgba(255,220,100,.08) 0%, transparent 70%);
+  animation: torchPulse 2s ease infinite;
+}
+.torch-zone.active .torch-icon {
+  animation: torchIconBounce 1s ease infinite;
+}
+.torch-zone.active .torch-label {
+  color: var(--gold);
+}
+.torch-zone.success {
+  border-color: var(--success);
+  background: radial-gradient(circle, rgba(0,255,136,.1) 0%, transparent 70%);
+  animation: successPulse 1s ease;
+}
+.torch-zone.success .torch-label {
+  color: var(--success);
+}
+.torch-status {
+  font-family: var(--font-mono);
+  font-size: .6rem; color: var(--text-dim);
+  letter-spacing: 1px; line-height: 1.7;
+  max-width: 280px;
+}
+.torch-fallback {
+  margin-top: 10px;
+}
+.torch-fallback-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--warn-dim);
+  color: var(--warn);
+  font-family: var(--font-mono);
+  font-size: .6rem; letter-spacing: 1px;
+  padding: 10px 20px; border-radius: 8px;
+  cursor: pointer; transition: all .2s;
+}
+.torch-fallback-btn:active { background: var(--warn-dim); transform: scale(.95); }
+
+/* ═══════════ NFC ═══════════ */
+.nfc-zone {
+  width: 200px; height: 200px;
+  border: 2px dashed var(--accent-dim); border-radius: 50%;
+  margin: 0 auto;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 12px; cursor: pointer; transition: all .3s;
+}
+.nfc-zone .nfc-icon { font-size: 3rem; animation: pulse 2s infinite; }
+.nfc-zone .nfc-label { font-family: var(--font-mono); font-size: .7rem; color: var(--text-dim); letter-spacing: 2px; }
+.nfc-zone.scanning { border-color: var(--accent); box-shadow: 0 0 30px var(--accent-dim); animation: successPulse 1s infinite; }
+
+/* ═══════════ GPS MAP ═══════════ */
+@keyframes radarSweep {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes playerPulse {
+  0% { box-shadow: 0 0 0 0 rgba(0,240,255,.6); }
+  70% { box-shadow: 0 0 0 14px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+.gps-module { text-align: center; }
+.gps-map-wrap {
+  position: relative;
+  width: 260px; height: 260px;
+  margin: 0 auto;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid var(--accent-dim);
+  box-shadow: 0 0 30px rgba(0,240,255,.08), inset 0 0 40px rgba(0,0,0,.5);
+}
+.gps-map-wrap .leaflet-container { background: var(--bg-deep) !important; }
+.gps-map-wrap .leaflet-control-attribution,
+.gps-map-wrap .leaflet-control-zoom { display: none !important; }
+.gps-map-overlay {
+  position: absolute; inset: 0;
+  pointer-events: none; z-index: 500;
+  border-radius: 50%;
+}
+.gps-map-overlay .sweep-line {
+  position: absolute; top: 50%; left: 50%;
+  width: 50%; height: 2px;
+  transform-origin: left center;
+  background: linear-gradient(90deg, var(--accent), transparent);
+  animation: radarSweep 4s linear infinite;
+  opacity: .4;
+}
+.gps-map-overlay .crosshair-h {
+  position: absolute; top: 50%; left: 0; right: 0;
+  height: 1px; background: var(--accent-dim); opacity: .25;
+}
+.gps-map-overlay .crosshair-v {
+  position: absolute; left: 50%; top: 0; bottom: 0;
+  width: 1px; background: var(--accent-dim); opacity: .25;
+}
+.gps-map-overlay .ring-overlay {
+  position: absolute; border-radius: 50%;
+  border: 1px solid #00f0ff12;
+  top: 50%; left: 50%; transform: translate(-50%,-50%);
+}
+.gps-map-overlay .ring-overlay:nth-child(4) { width: 33%; height: 33%; }
+.gps-map-overlay .ring-overlay:nth-child(5) { width: 66%; height: 66%; }
+.gps-map-overlay .ring-overlay:nth-child(6) { width: 100%; height: 100%; }
+.gps-map-overlay .scan-label {
+  position: absolute; top: 14px; left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-mono); font-size: .45rem;
+  color: var(--accent); letter-spacing: 3px;
+  background: rgba(10,10,15,.7);
+  padding: 2px 8px; border-radius: 4px;
+}
+.gps-edge-blip {
+  position: absolute;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--warn);
+  box-shadow: 0 0 10px var(--warn), 0 0 20px rgba(255,51,102,.3);
+  z-index: 502;
+  display: none;
+  transform: translate(-50%, -50%);
+  animation: pulse 1s infinite;
+}
+.gps-edge-blip .edge-arrow {
+  position: absolute;
+  width: 0; height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 8px solid var(--warn);
+  top: -10px; left: 50%;
+  transform: translateX(-50%);
+  filter: drop-shadow(0 0 4px var(--warn));
+}
+.gps-edge-dist {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-size: .45rem;
+  color: var(--warn);
+  white-space: nowrap;
+  z-index: 502;
+  display: none;
+  transform: translate(-50%, -50%);
+  background: rgba(10,10,15,.8);
+  padding: 1px 5px;
+  border-radius: 3px;
+  letter-spacing: 1px;
+}
+.gps-map-wrap::after {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  box-shadow: inset 0 0 30px 10px rgba(10,10,15,.6);
+  pointer-events: none; z-index: 501;
+}
+.gps-distance-wrap { margin: 14px auto 0; max-width: 340px; }
+.gps-distance-bar {
+  height: 6px; background: var(--bg-card);
+  border-radius: 3px; overflow: hidden;
+  border: 1px solid #222;
+}
+.gps-distance-fill {
+  height: 100%; width: 0%;
+  border-radius: 3px;
+  transition: width 1s ease, background .5s ease;
+}
+.gps-distance-label {
+  display: flex; justify-content: space-between;
+  margin-top: 6px;
+  font-family: var(--font-mono); font-size: .55rem;
+}
+.gps-distance-value { color: var(--text); font-weight: 600; }
+.gps-distance-status { color: var(--text-dim); }
+.gps-status {
+  font-family: var(--font-mono); font-size: .65rem;
+  color: var(--text-dim); margin-top: 14px;
+  letter-spacing: 1px; min-height: 40px; line-height: 1.6;
+}
+.gps-secret-reveal {
+  margin-top: 16px; padding: 16px;
+  background: var(--success-dim);
+  border: 1px solid var(--success);
+  border-radius: 12px;
+  animation: fadeInUp .6s ease;
+}
+.gps-secret-reveal .label {
+  font-family: var(--font-mono);
+  font-size: .6rem; color: var(--success);
+  letter-spacing: 2px; margin-bottom: 8px;
+}
+.gps-secret-reveal .code {
+  font-family: var(--font-display);
+  font-size: 1.8rem; font-weight: 900;
+  color: var(--text); letter-spacing: 8px;
+  text-shadow: 0 0 20px var(--success-dim);
+}
+.gps-btn-locate {
+  background: var(--accent); color: var(--bg-deep);
+  border: none; font-family: var(--font-display);
+  font-size: .65rem; font-weight: 700; letter-spacing: 2px;
+  padding: 14px 28px; border-radius: 10px;
+  cursor: pointer; margin-top: 14px;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.gps-btn-locate:active { transform: scale(.95); }
+.gps-btn-locate:disabled { opacity: .5; cursor: not-allowed; }
+.gps-btn-locate .spinner {
+  width: 14px; height: 14px;
+  border: 2px solid transparent;
+  border-top-color: var(--bg-deep);
+  border-radius: 50%;
+  animation: radarSweep .8s linear infinite;
+  display: none;
+}
+
+/* ═══════════ CAMERA RED FILTER ═══════════ */
+.camera-module { text-align: center; }
+.camera-viewfinder {
+  position: relative;
+  width: 100%; max-width: 340px;
+  height: 320px;
+  margin: 0 auto;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 2px solid var(--accent-dim);
+  background: #000;
+}
+.camera-viewfinder video { display: none; }
+.camera-viewfinder canvas {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.camera-scanline {
+  position: absolute; inset: 0;
+  pointer-events: none; z-index: 3;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 3px,
+    rgba(0,0,0,.06) 3px, rgba(0,0,0,.06) 4px
+  );
+}
+.camera-hud {
+  position: absolute; top: 0; left: 0; right: 0;
+  padding: 10px 14px;
+  display: flex; justify-content: space-between; align-items: center;
+  z-index: 4; pointer-events: none;
+}
+.camera-hud .rec {
+  font-family: var(--font-mono);
+  font-size: .5rem; color: var(--warn);
+  letter-spacing: 2px;
+  display: flex; align-items: center; gap: 6px;
+  animation: pulse 1.5s infinite;
+}
+.camera-hud .rec::before {
+  content: '';
+  width: 8px; height: 8px;
+  background: var(--warn);
+  border-radius: 50%;
+}
+.camera-hud .filter-label {
+  font-family: var(--font-mono);
+  font-size: .5rem; letter-spacing: 2px;
+  padding: 3px 10px; border-radius: 4px;
+  background: rgba(10,10,15,.7);
+  transition: color .3s;
+}
+.camera-controls {
+  display: flex; justify-content: center;
+  gap: 8px; margin-top: 14px;
+  flex-wrap: wrap;
+}
+.cam-filter-btn {
+  font-family: var(--font-mono);
+  font-size: .6rem; font-weight: 600;
+  letter-spacing: 1px; padding: 10px 16px;
+  border-radius: 8px; cursor: pointer;
+  border: 1px solid #333;
+  background: var(--bg-card);
+  color: var(--text-dim);
+  transition: all .25s ease;
+  display: flex; align-items: center; gap: 6px;
+  min-width: 54px; justify-content: center;
+}
+.cam-filter-btn:active { transform: scale(.95); }
+.cam-filter-btn .dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  transition: box-shadow .3s;
+}
+.cam-filter-btn[data-ch="r"] .dot { background: #ff3333; }
+.cam-filter-btn[data-ch="g"] .dot { background: #33ff66; }
+.cam-filter-btn[data-ch="b"] .dot { background: #3366ff; }
+.cam-filter-btn[data-ch="off"] .dot { background: var(--text-dim); }
+.cam-filter-btn.active {
+  border-color: var(--accent);
+  background: var(--bg-panel);
+  color: var(--text);
+}
+.cam-filter-btn.active[data-ch="r"] {
+  border-color: #ff3333;
+  box-shadow: 0 0 15px rgba(255,50,50,.25);
+  color: #ff6666;
+}
+.cam-filter-btn.active[data-ch="g"] {
+  border-color: #33ff66;
+  box-shadow: 0 0 15px rgba(50,255,100,.2);
+  color: #66ff88;
+}
+.cam-filter-btn.active[data-ch="b"] {
+  border-color: #3366ff;
+  box-shadow: 0 0 15px rgba(50,100,255,.25);
+  color: #6688ff;
+}
+.camera-flip {
+  background: var(--bg-card); border: 1px solid #333;
+  color: var(--text-dim); font-size: 1.1rem;
+  width: 42px; height: 42px; border-radius: 8px;
+  cursor: pointer; display: flex;
+  align-items: center; justify-content: center;
+}
+.camera-flip:active { background: var(--accent-dim); }
+.camera-instructions {
+  font-family: var(--font-mono);
+  font-size: .55rem; color: var(--text-dim);
+  margin-top: 12px; line-height: 1.7;
+  letter-spacing: .5px;
+}
+.camera-no-support {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  height: 200px; gap: 12px;
+  font-family: var(--font-mono);
+  font-size: .7rem; color: var(--warn);
+  text-align: center; line-height: 1.6;
+}
+
+/* ═══════════ AUDIO ═══════════ */
+  
+.audio-player { background: var(--bg-card); border-radius: 16px; padding: 5px; text-align: center; }
+.audio-wave { display: flex; align-items: center; justify-content: center; gap: 3px; height: 60px; margin-bottom: 5px; }
+.audio-wave .bar { width: 4px; background: var(--accent); border-radius: 2px; transition: height .15s; }
+.audio-controls { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; }
+.play-btn {
+  width: 46px; height: 46px; border-radius: 50%;
+  background: var(--accent); border: none;
+  color: var(--bg-deep); font-size: 1.4rem;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.play-btn:active { transform: scale(.9); }
+.speed-btn {
+  font-family: var(--font-mono); font-size: .6rem;
+  color: var(--accent); background: var(--accent-dim);
+  border: 1px solid var(--accent-dim); padding: 8px 14px;
+  border-radius: 8px; cursor: pointer; letter-spacing: 1px;
+}
+.speed-btn.active { background: var(--accent); color: var(--bg-deep); }
+.audio-native {
+  width: 100%; margin-top: 16px; border-radius: 8px;
+  filter: sepia(100%) saturate(300%) brightness(.8) hue-rotate(140deg);
+}
+.audio-status {
+  font-family: var(--font-mono); font-size: .6rem;
+  color: var(--text-dim); margin-top: 12px; letter-spacing: 1px;
+}
+
+/* ═══════════ REBUS ═══════════ */
+.rebus-container { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; padding: 20px; }
+.rebus-item {
+  font-size: 2.5rem; background: var(--bg-card);
+  border-radius: 12px; width: 70px; height: 70px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid #2a2a3a;
+}
+.rebus-plus { font-family: var(--font-display); font-size: 1.2rem; color: var(--text-dim); }
+.rebus-equals { font-family: var(--font-display); font-size: 1.5rem; color: var(--accent); }
+.rebus-answer-slot {
+  border: 2px dashed var(--accent-dim); border-radius: 12px;
+  padding: 12px 24px; font-family: var(--font-display);
+  font-size: 1.2rem; color: var(--accent); letter-spacing: 4px;
+  min-width: 120px; text-align: center;
+}
+
+/* ═══════════ FAKE BUG ═══════════ */
+#bug-screen { background: #000; justify-content: center; align-items: center; z-index: 999; }
+#bug-screen .bug-content { text-align: center; padding: 40px; }
+#bug-screen .bug-icon { font-size: 4rem; margin-bottom: 20px; animation: glitch 1s infinite; }
+#bug-screen .bug-text { font-family: var(--font-mono); font-size: .8rem; color: var(--warn); line-height: 2; }
+#bug-screen .bug-code { font-family: var(--font-mono); font-size: .6rem; color: #444; margin-top: 30px; line-height: 1.6; }
+
+/* ═══════════ VICTORY ═══════════ */
+#victory-screen {
+  background: radial-gradient(ellipse at center, #1a1a30 0%, var(--bg-deep) 70%);
+  justify-content: center; align-items: center;
+  padding: 40px 24px; text-align: center;
+}
+#victory-screen .vic-emoji { font-size: 4rem; margin-bottom: 20px; }
+#victory-screen .vic-title {
+  font-family: var(--font-display); font-size: 1.5rem;
+  font-weight: 900; color: var(--gold); letter-spacing: 4px;
+  margin-bottom: 12px; text-shadow: 0 0 30px rgba(255,215,0,.3);
+}
+#victory-screen .vic-text { font-size: 1rem; font-weight: 300; line-height: 1.8; color: var(--text); max-width: 320px; }
+
+/* ═══════════ ACT TRANSITION ═══════════ */
+#act-transition { background: var(--bg-deep); justify-content: center; align-items: center; text-align: center; padding: 40px; z-index: 50; }
+#act-transition .act-num {
+  font-family: var(--font-display); font-size: 3rem;
+  font-weight: 900; color: var(--accent);
+  text-shadow: 0 0 40px var(--accent-glow); margin-bottom: 8px;
+}
+#act-transition .act-name { font-family: var(--font-display); font-size: .8rem; letter-spacing: 6px; color: var(--text-dim); text-transform: uppercase; }
+
+/* ═══════════ BUTTONS ═══════════ */
+.btn-primary {
+  background: var(--accent); color: var(--bg-deep); border: none;
+  font-family: var(--font-display); font-size: .7rem;
+  font-weight: 700; letter-spacing: 3px; padding: 16px 32px;
+  border-radius: 10px; cursor: pointer; text-transform: uppercase;
+}
+.btn-primary:active { transform: scale(.95); }
+.btn-ghost {
+  background: transparent; color: var(--text-dim);
+  border: 1px solid #333; font-family: var(--font-mono);
+  font-size: .65rem; padding: 10px 20px; border-radius: 8px;
+  cursor: pointer; letter-spacing: 1px;
+}
+.btn-ghost:active { background: var(--bg-card); }
+
+/* ═══════════ DEV TOOLS ═══════════ */
+.dev-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: #1a0a0a; border-top: 1px solid var(--warn-dim);
+  padding: 8px 16px; display: flex; gap: 8px;
+  align-items: center; z-index: 200;
+  font-family: var(--font-mono); font-size: .6rem;
+}
+.dev-bar button {
+  background: var(--warn-dim); border: 1px solid var(--warn);
+  color: var(--warn); padding: 4px 10px; border-radius: 4px;
+  font-family: var(--font-mono); font-size: .55rem;
+  cursor: pointer; letter-spacing: 1px;
+}
+.dev-bar span { color: var(--warn); letter-spacing: 1px; }
+
+@media (min-width: 500px) {
+  .screen { max-width: 430px; margin: 0 auto; border-left: 1px solid #1a1a2a; border-right: 1px solid #1a1a2a; }
+}
+</style>
+</head>
+<body>
+
+ <!-- PRE-BOOT SECURITY -->
+<div id="preboot-screen" class="screen active">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100%;padding:30px 24px;text-align:center;">
+    <div style="font-size:2.5rem;margin-bottom:16px;">🛡️</div>
+    <div style="font-family:var(--font-display);font-size:.65rem;letter-spacing:6px;color:var(--warn);border:1px solid var(--warn-dim);padding:6px 18px;display:inline-block;margin-bottom:24px;">/// PROTOCOLE DE SÉCURITÉ ///</div>
+    
+    <div style="font-family:var(--font-mono);font-size:.65rem;color:var(--accent);letter-spacing:2px;margin-bottom:20px;">BRIEFING PRÉ-MISSION</div>
+    
+    <div style="text-align:left;max-width:340px;width:100%;display:flex;flex-direction:column;gap:14px;margin-bottom:30px;">
+      
+      <div style="background:var(--bg-card);border:1px solid #222233;border-radius:10px;padding:14px 16px;display:flex;align-items:flex-start;gap:12px;">
+        <span style="font-size:1.3rem;">📍</span>
+        <div>
+          <div style="font-family:var(--font-mono);font-size:.6rem;color:var(--accent);letter-spacing:1px;margin-bottom:4px;">GÉOLOCALISATION</div>
+          <div style="font-size:.8rem;font-weight:300;color:var(--text);line-height:1.5;">Certaines épreuves nécessitent votre position GPS. Autorisez l'accès quand demandé.</div>
+        </div>
+      </div>
+      
+      <div style="background:var(--bg-card);border:1px solid #222233;border-radius:10px;padding:14px 16px;display:flex;align-items:flex-start;gap:12px;">
+        <span style="font-size:1.3rem;">📡</span>
+        <div>
+          <div style="font-family:var(--font-mono);font-size:.6rem;color:var(--accent);letter-spacing:1px;margin-bottom:4px;">MODULE NFC</div>
+          <div style="font-size:.8rem;font-weight:300;color:var(--text);line-height:1.5;">Un scan NFC sera requis. Assurez-vous que le NFC est activé dans vos paramètres.</div>
+        </div>
+      </div>
+      
+      <div style="background:var(--bg-card);border:1px solid #222233;border-radius:10px;padding:14px 16px;display:flex;align-items:flex-start;gap:12px;">
+        <span style="font-size:1.3rem;">📷</span>
+        <div>
+          <div style="font-family:var(--font-mono);font-size:.6rem;color:var(--accent);letter-spacing:1px;margin-bottom:4px;">CAMÉRA & FLASH</div>
+          <div style="font-size:.8rem;font-weight:300;color:var(--text);line-height:1.5;">L'accès à la caméra sera sollicité pour des modules de détection optique.</div>
+        </div>
+      </div>
+      
+      <div style="background:var(--bg-card);border:1px solid #222233;border-radius:10px;padding:14px 16px;display:flex;align-items:flex-start;gap:12px;">
+        <span style="font-size:1.3rem;">🔊</span>
+        <div>
+          <div style="font-family:var(--font-mono);font-size:.6rem;color:var(--accent);letter-spacing:1px;margin-bottom:4px;">AUDIO</div>
+          <div style="font-size:.8rem;font-weight:300;color:var(--text);line-height:1.5;">Activez le son. Des transmissions audio cryptées devront être analysées.</div>
+        </div>
+      </div>
+      
+    </div>
+    
+    <div style="font-family:var(--font-mono);font-size:.5rem;color:var(--warn);letter-spacing:1px;line-height:1.8;max-width:300px;margin-bottom:24px;padding:10px;border:1px solid var(--warn-dim);border-radius:8px;background:var(--warn-dim);">
+      ⚠ AVERTISSEMENT : Toute tentative de fermeture durant une épreuve entraînera la perte définitive de votre progression. L'agence décline toute responsabilité en cas de surchauffe neuronale.
+    </div>
+    
+    <button class="btn-primary" onclick="launchBoot()">J'AI COMPRIS — INITIALISER</button>
+    <div style="font-family:var(--font-mono);font-size:.45rem;color:#333;margin-top:14px;letter-spacing:2px;">CLASSIFICATION : NIVEAU OMEGA</div>
+  </div>
+</div>
+
+  
+<!-- BOOT -->
+<div id="boot-screen" class="screen">
+  <img src="icons/avatar.png" alt="Avatar" width="192" height="192">
+  <div class="logo">PROJET 1986</div>
+  <div class="subtitle">Système de réactivation</div>
+  <div id="boot-log"></div>
+  <div id="boot-buttons" style="display:none; text-align:center; animation: fadeInUp .6s ease;">
+    <button class="btn-primary" id="btn-install" onclick="installPWA()" style="display:none;">
+      📲 INSTALLER L'APP
+    </button>
+    <div id="install-hint" style="display:none; font-family:var(--font-mono); font-size:.55rem; color:var(--text-dim); margin-top:10px; line-height:1.6; max-width:280px; margin-left:auto; margin-right:auto;"></div>
+    <button class="btn-ghost" id="btn-skip" onclick="skipInstall()" style="display:none; margin-top:14px;">
+      CONTINUER SANS INSTALLER ›
+    </button>
+    <button class="btn-primary" id="btn-enter-direct" onclick="showScreen('intro-screen')" style="display:none;">
+      ENTRER
+    </button>
+  </div>
+</div>
+
+<!-- INTRO -->
+<div id="intro-screen" class="screen">
+  <div class="classified">/// CONFIDENTIEL ///</div>
+  <div class="brief">
+    Agent, votre profil a été <strong>sélectionné</strong>.<br><br>
+    En <strong>1986</strong>, un sujet exceptionnel a vu le jour. Aujourd'hui, <strong>40 ans plus tard</strong>, il est temps de prouver que les années n'ont fait que renforcer ses capacités.<br><br>
+    <strong id="total-display">17 épreuves</strong> vous attendent. Logique, mémoire, agilité, culture… chaque réponse correcte vous rapproche de la <strong>récompense finale</strong>.<br><br>
+    Aucun retour en arrière possible.<br>
+    <span style="color:var(--warn)">Bonne chance.</span>
+  </div>
+  <button class="btn-primary" onclick="startGame()">ACCEPTER LA MISSION</button>
+</div>
+
+<!-- HUB -->
+<div id="hub-screen" class="screen">
+  <div class="hub-header">
+    <div class="codename">/// PROJET 1986 ///</div>
+    <div class="progress-label">PROGRESSION : <span id="progress-text">0/17</span></div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="progress-bar" style="width:0%"></div>
+    </div>
+  </div>
+  <div class="acts-container" id="acts-container"></div>
+</div>
+
+<!-- ENIGMA -->
+<div id="enigma-screen" class="screen">
+  <div class="enigma-header">
+    <button class="back-btn" onclick="showHub()">‹</button>
+    <div class="enigma-header-info">
+      <div class="enigma-header-num" id="enigma-label">ÉNIGME 01</div>
+      <div class="enigma-header-type" id="enigma-type-label"></div>
+    </div>
+    <button class="hint-btn" id="hint-btn" onclick="showHint()">INDICE</button>
+  </div>
+  <div class="enigma-body" id="enigma-body"></div>
+</div>
+
+<!-- ACT TRANSITION -->
+<div id="act-transition" class="screen">
+  <div class="act-num" id="act-trans-num"></div>
+  <div class="act-name" id="act-trans-name"></div>
+</div>
+
+<!-- FAKE BUG -->
+<div id="bug-screen" class="screen">
+  <div class="bug-content">
+    <div class="bug-icon">⚠️</div>
+    <div class="bug-text">
+      ERREUR SYSTÈME CRITIQUE<br>
+      Module [ENIGMA_CORE] corrompu<br>
+      Tentative de récupération...<br><br>
+      <span style="color:#666">Ne fermez pas l'application</span>
+    </div>
+    <div class="bug-code">
+      0x1986F: STACK_OVERFLOW<br>
+      at processEnigma() line 1986<br>
+      at validateAgent() line 40<br>
+      MEMORY DUMP: 47 55 41 44<br>
+      45 4C 4F 55 50 45
+    </div>
+  </div>
+</div>
+
+<!-- VICTORY -->
+<div id="victory-screen" class="screen">
+  <div class="vic-emoji">🎉</div>
+  <img src="icons/fin.png" alt="Récompense" style="max-width:300px;width:90%;border-radius:12px;margin-top:20px;box-shadow:0 4px 20px rgba(0,0,0,.4);">
+  <div class="vic-title">MISSION ACCOMPLIE</div>
+  <div class="vic-text">
+    Agent, vous avez prouvé que 40 ans n'est que le début.<br><br>
+    Votre récompense a été déverrouillée.<br><br>
+    <strong style="color:var(--gold)">Joyeux anniversaire !</strong>
+  </div>
+  <div style="margin-top:30px;">
+    <button class="btn-primary" onclick="resetGame()">REJOUER</button>
+  </div>
+</div>
+
+<!-- DEV BAR -->
+<!--
+  <div class="dev-bar" id="dev-bar">
+  <span>DEV</span>
+  <button onclick="devSkip()">SKIP ►</button>
+  <button onclick="devSolveAll()">ALL ✓</button>
+  <button onclick="resetGame()">RESET</button>
+  <button onclick="document.getElementById('dev-bar').style.display='none'">✕</button>
+</div>
+-->
+
+<!-- AUDIO ELEMENTS (hidden) -->
+<audio id="intro-music" preload="auto" loop src="intro3.m4a"></audio>
+<audio id="fouras-audio" preload="auto" src="Fouras.m4a"></audio>
+<audio id="melody-audio" preload="auto" src="melody.wav"></audio>
+
+<script>
+// ═══════════════════════ CONFIGURATION ═══════════════════════
+// Contenu embarqué = copie de secours. Écrasé par config.json au démarrage (voir loadConfig).
+const EMBEDDED_CONFIG = {
+  "schemaVersion": 1,
+  "meta": {
+    "id": "projet-1986",
+    "name": "PROJET 1986 : RÉACTIVATION",
+    "client": "",
+    "note": "Anniversaire 40 ans",
+    "version": 1,
+    "createdAt": "2026-06-17T09:50:30.589Z",
+    "updatedAt": "2026-06-17T09:50:30.589Z"
+  },
+  "branding": {
+    "docTitle": "PROJET 1986 : RÉACTIVATION",
+    "logo": "PROJET 1986",
+    "subtitle": "Système de réactivation",
+    "codename": "/// PROJET 1986 ///",
+    "classified": "/// CONFIDENTIEL ///",
+    "avatar": "icons/avatar.png"
+  },
+  "actBoundaries": [
+    0,
+    8,
+    16,
+    24,
+    32,
+    40
+  ],
+  "acts": [
+    {
+      "name": "INITIALISATION",
+      "subtitle": "Vérification d'identité"
+    },
+    {
+      "name": "CALIBRATION",
+      "subtitle": "Ajustement cognitifs"
+    },
+    {
+      "name": "ÉPREUVES",
+      "subtitle": "Résistance mentale"
+    },
+    {
+      "name": "ACTIVATION",
+      "subtitle": "Synchronisation sécurisée"
+    },
+    {
+      "name": "VALIDATION",
+      "subtitle": "Séquence finale"
+    }
+  ],
+  "enigmas": [
+    {
+      "id": 1,
+      "type": "Culture",
+      "format": "text",
+      "narrative": "SCAN BIOMÉTRIQUE > Vérification des centres d'intérêt >",
+      "question": "Même s'il n'est pas menuisier,\n il a quand même ciré beaucoup de parquets.\n\nMalgré ses nombreux talents,\n les briques n'ont jamais fait partie de ses habitudes.\n\nIl a été au sommet,\n mais tout le monde le souhaite à ses pieds.\n\nQui est-ce ?",
+      "answer": [
+        "jordan",
+        "michael jordan"
+      ],
+      "hint": "Sa Majesté de l'Air...",
+      "title": "Bricolage"
+    },
+    {
+      "id": 2,
+      "type": "Suite Logique",
+      "format": "text",
+      "narrative": "MODULE LOGIQUE > Séquence numérique incomplète détectée. Analyse requise.",
+      "question": "21  —  22  —  26  —  ?\n\nComplétez la suite.",
+      "answer": [
+        "5",
+        "05"
+      ],
+      "hint": "??/??/????",
+      "title": "La Suite Mystère"
+    },
+    {
+      "id": 3,
+      "type": "Culture",
+      "format": "text",
+      "narrative": "MODULE CULTUREL > Scan des références générationnelles > Décennie 1986.",
+      "question": "1986, tu pointais le bout de ton nez.\n\nLa même année il décide de prendre un peu de congés.\n\nVoiture de sport, casquette.\n\nEn une seule journée il vous a marqué pendant des années.\n\nQui est-ce ?",
+      "answer": [
+        "ferris bueller",
+        "ferris",
+        "bueller"
+      ],
+      "hint": "\"Life moves pretty fast...\" 🎬",
+      "title": "La légende"
+    },
+    {
+      "id": 4,
+      "type": "Culture",
+      "format": "text",
+      "narrative": "SCAN BIOMÉTRIQUE > Vérification des capacités élémentaires",
+      "question": "Grâce à moi, elle est belle !\n\nQui suis-je ?",
+      "answer": [
+        "b"
+      ],
+      "hint": "Grâce à moi, on est bon",
+      "title": "Belle"
+    },
+    {
+      "id": 5,
+      "type": "Interaction",
+      "format": "lightdetect",
+      "narrative": "ALERTE > Module optique compromis.",
+      "question": "Et la lumière fût...",
+      "answer": [
+        "ok"
+      ],
+      "hint": "Passez de l'obsurité à la lumière",
+      "title": "Et la lumière fut"
+    },
+    {
+      "id": 6,
+      "type": "Nombre",
+      "format": "text",
+      "narrative": "MODULE logique > Sauras-tu révéler les bons nombres.",
+      "question": "Quels sont les trois nombres positifs qui donnent le même résultat quand on les multiplie et quand on les additionne ensemble ?",
+      "answer": [
+        "1,2,3"
+      ],
+      "hint": "C'est mort... à toi de trouver !",
+      "title": "+ & x"
+    },
+    {
+      "id": 7,
+      "type": "Histoire",
+      "format": "text",
+      "narrative": "SCAN BIOMÉTRIQUE > Vérification des centres d'intérêt.",
+      "question": "Je peux me faire attendre.\n\nMais en général je finis par pousser.\n\nJe suis moins fournie que ton espoir de m'avoir.\n\nQui suis-je ?",
+      "answer": [
+        "barbe"
+      ],
+      "hint": "C'est mort ! A toi de trouver !",
+      "title": "Hope"
+    },
+    {
+      "id": 8,
+      "type": "Audio Père Fouras",
+      "format": "audio",
+      "audioId": "fouras-audio",
+      "hasWave": true,
+      "hasSpeedControl": true,
+      "hasDownload": true,
+      "narrative": "INTERCEPTION > Message audio capté. Le Père Fouras a parlé. Décodage nécessaire.",
+      "question": "Trouvez la réponse à l'énigme.",
+      "answer": [
+        "pas",
+        "un pas"
+      ],
+      "hint": "... de géant",
+      "title": "Transmission Brouillée"
+    },
+    {
+      "id": 9,
+      "type": "Ieps",
+      "format": "text",
+      "narrative": "MODULE logique > Vérification des capacités d'analyse.",
+      "image": "icons/pieds.png",
+      "question": "Combien de pieds voyez-vous ?",
+      "answer": [
+        "12"
+      ],
+      "hint": "La tête en bas",
+      "title": "Ieps"
+    },
+    {
+      "id": 10,
+      "type": "Suite gourmande",
+      "format": "text",
+      "narrative": "MODULE LOGIQUE > Séquence numérique incomplète détectée. Analyse requise.",
+      "question": "Trouvez le résultat :\n\n🍟  -  8  -  9  -  1\n1  -  9  -🍔-  1\n0  -  2  -  0  -  2\n2  -  0  -  1  -  🍪\n🍕-  2  -  0  -  2\n\n🍔  x  🍕  +  🍪 - 2 x 🍟 = ?",
+      "answer": [
+        "40"
+      ],
+      "hint": "Vois-tu les années ?",
+      "title": "La Faim"
+    },
+    {
+      "id": 11,
+      "type": "Devinette",
+      "format": "text",
+      "narrative": "MODULE LOGIQUE > Niveau 2 > Capacité de déduction sous pression.",
+      "question": "Je suis plus puissant que Dieu.\n\nJe suis plus méchant que le diable.\n\nLe pauvre en possède.\n\nLe riche en manque.\n\nEt si vous me mangez, vous mourrez.",
+      "answer": [
+        "rien"
+      ],
+      "hint": "Tout",
+      "title": "L'essentiel"
+    },
+    {
+      "id": 12,
+      "type": "Devinette",
+      "format": "text",
+      "narrative": "MODULE ANALYTIQUE > Épreuve de raisonnement. Concentration maximale requise.",
+      "question": "Tu es dans un bus qui part avec 6 passagers dont 4 ont les yeux bleus et 2 ont les yeux verts\n\nÀ l'arrêt suivant, 2 montent et 3 descendent.\nAu suivant, 5 descendent et 4 montent.\n\nDe quelle couleur sont les yeux du chauffeur ?",
+      "answer": [
+        "noir",
+        "marron",
+        "noirs",
+        "marrons",
+        "brun",
+        "bruns"
+      ],
+      "hint": "QUI conduit le bus ? 👀",
+      "title": "Le Piège du Bus"
+    },
+    {
+      "id": 13,
+      "type": "Culture",
+      "format": "text",
+      "narrative": "MODULE CULTUREL > Scan local > Identité.",
+      "question": "L'amiral mort flotta dans ma chair pour rentrer au port, depuis, mon surnom a le goût du sang.\n\n Colomb baptisa une de mes mères du nom d'une vierge espagnole\n\nJe naît du berceau de la terre, et meurs en gorge d'homme.\n\nQui suis-je ?",
+      "answer": [
+        "rhum",
+        "le rhum",
+        "rum"
+      ],
+      "hint": "Tchin tchin",
+      "title": "L'Or"
+    },
+    {
+      "id": 14,
+      "type": "0101",
+      "format": "text",
+      "narrative": "MODULE PROGRAMMATION > Un code a été dissimulé sauras-tu le révéler.",
+      "question": "01010100 01110010 01101001 01110000 01101100 01100101 00100000 01110011 01100001 01110101 01110100",
+      "answer": [
+        "triple saut"
+      ],
+      "hint": "3 fois tu voleras",
+      "title": "La machine"
+    },
+    {
+      "id": 15,
+      "type": "Devinette",
+      "format": "text",
+      "narrative": "MODULE LOGIQUE > Niveau 2 > Capacité de déduction sous pression.",
+      "iframe": "https://scape.enepe.fr/ressources/cesar/index2.html",
+      "question": "🥑 - AVOCAT - 🥑\n\nV'SWZYBDKXD M'OCD ZKC VK MREDO M'OCD V'KDDBBSCCKQO",
+      "answer": [
+        "L'IMPORTANT C'EST PAS LA CHUTE, C'EST L'ATTERRISSAGE"
+      ],
+      "hint": "A vo cat",
+      "title": "Avocat"
+    },
+    {
+      "id": 16,
+      "type": "Position GPS",
+      "format": "gps",
+      "narrative": "MODULE GPS > Signal crypté détecté. Déplacement physique requis pour décoder.",
+      "question": "Un signal a été localisé. Déplacez-vous jusqu'à la zone cible pour décrypter le message secret.",
+      "gpsTarget": {
+        "lat": 16.199749,
+        "lng": -61.467685
+      },
+      "gpsRadius": 35,
+      "gpsSecret": "OMBRE",
+      "answer": [
+        "ombre",
+        "l'ombre"
+      ],
+      "hint": "Approchez-vous du point cible... le radar vous guide !",
+      "title": "Signal Localisé"
+    },
+    {
+      "id": 17,
+      "type": "Culture",
+      "format": "text",
+      "narrative": "MODULE CULTURE > Vérification des centres d'intérêt.",
+      "question": "Je suis né muet mais après 40 ans,\n\nj'ai enfin fini par parler.\n\nQui suis-je ?",
+      "answer": [
+        "cinéma"
+      ],
+      "hint": "Des frères à Hollywood",
+      "title": "Parole"
+    },
+    {
+      "id": 18,
+      "type": "Culture",
+      "format": "text",
+      "narrative": "SCAN BIOMÉTRIQUE > Vérification des capacités d'analyse.",
+      "question": "Je suis entre 188 et 190,\n\n mais je ne suis pas 189.\n\nQui suis-je ?",
+      "answer": [
+        "et"
+      ],
+      "hint": "Littéralement entre",
+      "title": "188-190"
+    },
+    {
+      "id": 19,
+      "type": "Faux Bug",
+      "format": "fakebug",
+      "narrative": "",
+      "question": "",
+      "answer": [
+        "ok"
+      ],
+      "hint": "Patience... le système va se rétablir 😏",
+      "title": "/// ERREUR SYSTÈME ///"
+    },
+    {
+      "id": 20,
+      "type": "Histoire",
+      "format": "text",
+      "narrative": "SCAN BIOMÉTRIQUE > Vérification des centres d'intérêt",
+      "question": "On fait appel à moi les jours de pluie,\n\nMais ce jour-là, j'étais au mauvais endroit.\n\nJe suis parfois monté, puis démonté...\n\nQui suis-je ?",
+      "answer": [
+        "essuie glaces,essuie-glaces"
+      ],
+      "hint": "",
+      "title": "Humide"
+    },
+    {
+      "id": 21,
+      "type": "Rébus",
+      "format": "rebus",
+      "narrative": "MODULE DÉCRYPTAGE > Séquence visuelle détectée. Interprétation requise.",
+      "question": "Déchiffrez ce rébus :",
+      "rebusItems": [
+        "🐏",
+        "➕",
+        "♨️"
+      ],
+      "rebusHint": "Animal + Sensation",
+      "answer": [
+        "ramothe",
+        "ram hot",
+        "ramotte"
+      ],
+      "hint": "C'est mort ! A toi de jouer !",
+      "title": "Symboles Cachés"
+    },
+    {
+      "id": 22,
+      "type": "Mathématiques",
+      "format": "text",
+      "narrative": "MODULE CALCUL > Équation à résoudre. Précision requise.",
+      "question": "J'ajoute 2 au produit de deux nombres consécutifs supérieurs à 0 et j'obtiens 14.\n\nQuels sont ces deux nombres ?\n(Répondez sous la forme : X et Y)",
+      "answer": [
+        "3 et 4",
+        "3et4",
+        "3,4",
+        "3 4"
+      ],
+      "hint": "? × (? + 1) + 2 = 14 → ? × (? + 1) = 12",
+      "title": "L'Équation"
+    },
+    {
+      "id": 23,
+      "type": "Devinette",
+      "format": "text",
+      "narrative": "MODULE LOGIQUE > Niveau 2 > Capacité de déduction sous pression.",
+      "question": "Un homme regarde un portrait et dit :\n\n« Je n'ai ni frère ni sœur, mais le père de cet homme est le fils de mon père. »\n\nQui est la personne sur le portrait ?",
+      "answer": [
+        "son fils",
+        "fils",
+        "mon fils"
+      ],
+      "hint": "C'est mort ! A toi de trouver",
+      "title": "Le Portrait"
+    },
+    {
+      "id": 24,
+      "type": "Position GPS",
+      "format": "gps",
+      "narrative": "MODULE GPS > Signal crypté détecté. Déplacement physique requis pour décoder.",
+      "question": "Un signal a été localisé. Déplacez-vous jusqu'à la zone cible pour décrypter le message secret.",
+      "gpsTarget": {
+        "lat": 16.199749,
+        "lng": -61.467685
+      },
+      "gpsRadius": 500,
+      "gpsSecret": "OMBRE",
+      "answer": [
+        "ombre",
+        "l'ombre"
+      ],
+      "hint": "Approchez-vous du point cible... le radar vous guide !",
+      "title": "Signal Localisé"
+    },
+    {
+      "id": 25,
+      "type": "Géoguessing",
+      "format": "text",
+      "narrative": "MODULE GEOGRAPHIQUE > Capacité de repérage en mission.",
+      "image": "icons/lisbonne.png",
+      "iframe": "https://lockee.fr/o/EmWCssUf?nobg?noft",
+      "answer": [
+        "woosah"
+      ],
+      "hint": "Ch'est pas Ch'an Franchichchau",
+      "title": "Guess where"
+    },
+    {
+      "id": 26,
+      "type": "Scan NFC",
+      "format": "nfc",
+      "narrative": "MODULE NFC > Tag détecté à proximité. Approchez votre appareil.",
+      "question": "<!> Alerte sécurité <!> \n\n Scanne de vérification obligatoire",
+      "nfcTagId": "04:EE:01:0A:30:1F:94",
+      "answer": [
+        "ok"
+      ],
+      "hint": "Utiliser votre mobile scanner pour detecter le signal",
+      "title": "Signal Fantôme"
+    },
+    {
+      "id": 27,
+      "type": "Devinette",
+      "format": "text",
+      "narrative": "MODULE CULTURE > Pensée abstraite requise.",
+      "question": "Je suis toujours devant toi,\n\nMais tu ne peux jamais me rattraper.\n\nPlus tu avances, plus j'avance aussi.\n\nQui suis-je ?",
+      "answer": [
+        "futur",
+        "le futur",
+        "l'avenir",
+        "avenir",
+        "demain"
+      ],
+      "hint": "Nombreux veulent y voir, d'autres veulent en revenir",
+      "title": "L'Insaisissable"
+    },
+    {
+      "id": 28,
+      "type": "Cadena",
+      "format": "text",
+      "narrative": "MODULE ACTION > Niveau 2 > Capacité de manipulation prolongée.",
+      "question": "Derrière chaque agent se trouve la clé... \n\n à toi de la trouver pour la faire parler.",
+      "answer": [
+        "Bas les pattes tête de poule !"
+      ],
+      "hint": "Regarde derrière toi...",
+      "title": "Brain"
+    },
+    {
+      "id": 29,
+      "type": "Souvenir",
+      "format": "text",
+      "narrative": "MODULE MEMOIRE > Niveau 3 > Capacité de mémorisation avancée.",
+      "image": "icons/jetpack.gif",
+      "question": "Agent si vous voulez poursuivre la mission, separez les éléments de votre réponse par ''-''",
+      "answer": [
+        "L1-L2-R1-R2-Haut-Bas-Gauche-Droite-L1-L2-R1-R2-Haut-Bas-Gauche-Droite"
+      ],
+      "hint": "cheat code",
+      "title": "Carl Johnson"
+    },
+    {
+      "id": 30,
+      "type": "Cadena",
+      "format": "text",
+      "narrative": "MODULE LOGIQUE > Un code a été dissimulé, sauras-tu le révéler.",
+      "image2": "icons/cadenacryptex.png",
+      "iframe2": "https://lockee.fr/o/iR33Tu2z?nobg?noft",
+      "question": "",
+      "answer": [
+        "Ace ventura"
+      ],
+      "hint": "C'est mort ! A toi de trouver !",
+      "title": "Le cadena"
+    },
+    {
+      "id": 31,
+      "type": "Code",
+      "format": "keypad",
+      "narrative": "MODULE SÉCURITÉ > Code d'accès requis. 4 chiffres. Aucune erreur tolérée.",
+      "question": "Entrez le code d'activation.",
+      "answer": [
+        "3827"
+      ],
+      "hint": "🔊🔊🔊🔊",
+      "title": "Code d'Activation"
+    },
+    {
+      "id": 32,
+      "type": "Vision Secrète",
+      "format": "text",
+      "narrative": "MODULE SOUVENIR > Une bobine temporelle a été dissimulée.",
+      "question": "Trouvez la bobine pour trouver le lieu secret.",
+      "answer": [
+        "le loft"
+      ],
+      "hint": "OK bobine temporelle, c'est peut être un grand mot... on va dire étiquette",
+      "title": "Bobine"
+    },
+    {
+      "id": 33,
+      "type": "Géoguessing",
+      "format": "text",
+      "narrative": "MODULE GEOGRAPHIQUE > Capacité de repérage en mission.",
+      "iframe": "https://lockee.fr/o/YeowD45g?nobg?noft",
+      "question": "Je suis né entre deux mondes instables,\nNi tout à fait terre, ni tout à fait mer.NOn me croit immobile, mais je change sans cesse,\nCar ceux qui m’entourent avancent et reculent sans fin.\nJ’ai défié le temps, les assauts et les hommes,\nGrimpant vers le ciel comme une prière de pierre.\nRois, pèlerins et curieux m’ont convoité,\nMais seuls les patients savent quand je me révèle.\nQui suis-je ?",
+      "answer": [
+        "un type fier, un type fort, yul brenner, junior bevil"
+      ],
+      "hint": "C'est mort ! A toi de trouver !???",
+      "title": "Guess where"
+    },
+    {
+      "id": 34,
+      "type": "Labyrinthe",
+      "format": "text",
+      "narrative": "MODULE calcul > Un code a été dissimulé sur un document physique. Seul le chemin du labyrinthe peut le révéler.",
+      "image": "icons/labyrinthe_opp_c.png",
+      "question": "",
+      "answer": [
+        "FY57X?N3PML90R6ID"
+      ],
+      "hint": "F----[...]----D",
+      "title": "La caltoch"
+    },
+    {
+      "id": 35,
+      "type": "Cadena",
+      "format": "text",
+      "narrative": "MODULE LOGIQUE > Niveau 2 > Capacité de déduction sous pression.",
+      "iframe": "https://lockee.fr/o/a3ds9RFX?nobg?noft",
+      "question": "A vous tous vous atteignez 288",
+      "answer": [
+        "le prince de bel air"
+      ],
+      "hint": "288 ça fait vieux !",
+      "title": "Click"
+    },
+    {
+      "id": 36,
+      "type": "Géoguessing",
+      "format": "text",
+      "narrative": "MODULE GEOGRAPHIQUE > Capacité de repérage en mission.",
+      "image": "icons/nimes.png",
+      "iframe": "https://lockee.fr/o/gqcbvbxg?nobg?noft",
+      "answer": [
+        "fais dodo"
+      ],
+      "hint": "Les arènes de ",
+      "title": "Guess where"
+    },
+    {
+      "id": 37,
+      "type": "Mots mélangés",
+      "format": "text",
+      "narrative": "MODULE LOGIQUE > Niveau 2 > Capacité de déduction sous pression.",
+      "iframe": "https://ladigitale.dev/digilock/#/l/69dbf54b65713?vue=apercu",
+      "question": "Cherche et trouve",
+      "answer": [
+        "sherman"
+      ],
+      "hint": "C'est mort ! A toi de trouver !",
+      "title": "Trouvé"
+    },
+    {
+      "id": 38,
+      "type": "Logique",
+      "format": "text",
+      "narrative": "MODULE ACTION > Niveau 2 > Capacité de manipulation prolongée.",
+      "iframe": "https://lockee.fr/o/4Y0EUfoe?nobg?noft",
+      "question": "???",
+      "answer": [
+        "Trinity"
+      ],
+      "hint": "Blanc b...",
+      "title": "Box"
+    },
+    {
+      "id": 39,
+      "type": "Piano",
+      "format": "audio",
+      "audioId": "melody-audio",
+      "hasWave": false,
+      "hasSpeedControl": false,
+      "hasDownload": false,
+      "narrative": "MODULE LOGIQUE > Niveau 2 > Capacité de déduction sous pression.",
+      "iframe": "https://lockee.fr/o/NEfc604n?nobg&noft",
+      "question": "A toi de jouer l'artiste !",
+      "answer": [
+        "stephen"
+      ],
+      "hint": "C'est mort ! A toi de trouver !",
+      "title": "Lalala"
+    },
+    {
+      "id": 40,
+      "type": "Puzzle Final",
+      "format": "puzzle",
+      "narrative": "SÉQUENCE FINALE > Reconstituez l'image pour déverrouiller la récompense.",
+      "question": "Remettez les pièces dans l'ordre pour révéler le message final.\n\nAppuyez sur une pièce adjacente à l'espace vide pour la déplacer.",
+      "answer": [
+        "ok"
+      ],
+      "hint": "Déplacez les pièces une à une vers l'espace vide, comme un taquin.",
+      "title": "La Révélation"
+    }
+  ]
+};
+let GAME_CONFIG = EMBEDDED_CONFIG;
+let ACT_BOUNDARIES = GAME_CONFIG.actBoundaries;
+let ACTS = GAME_CONFIG.acts;
+let ENIGMAS = GAME_CONFIG.enigmas;
+
+let TOTAL = ENIGMAS.length;
+
+// ═══════════════════════ CHARGEMENT CONFIG EXTERNE ═══════════════════════
+// Tente de charger config.json. En cas d'échec (offline/file://), garde EMBEDDED_CONFIG.
+function configFileFromURL() {
+  // Permet ?config=config-mariage.json — restreint aux noms de fichiers .json sûrs.
+  const p = new URLSearchParams(location.search).get('config');
+  if (p && /^[\w.-]+\.json$/.test(p)) return './' + p;
+  return './config.json';
+}
+async function loadConfig() {
+  try {
+    const res = await fetch(configFileFromURL(), { cache: 'no-cache' });
+    if (!res.ok) return;
+    const cfg = await res.json();
+    if (cfg && Array.isArray(cfg.enigmas) && cfg.enigmas.length) {
+      applyConfig(cfg);
+    }
+  } catch (e) {
+    console.log('config.json non chargé, copie embarquée utilisée.', e);
+  }
+}
+function applyConfig(cfg) {
+  GAME_CONFIG = cfg;
+  ACT_BOUNDARIES = cfg.actBoundaries || ACT_BOUNDARIES;
+  ACTS = cfg.acts || ACTS;
+  ENIGMAS = cfg.enigmas || ENIGMAS;
+  TOTAL = ENIGMAS.length;
+  applyBranding(cfg.branding || {});
+}
+function applyBranding(b) {
+  if (!b) return;
+  if (b.docTitle) document.title = b.docTitle;
+  const set = (sel, val, html) => {
+    if (val == null) return;
+    document.querySelectorAll(sel).forEach(el => { html ? el.innerHTML = val : el.textContent = val; });
+  };
+  set('#boot-screen .logo', b.logo);
+  set('#boot-screen .subtitle', b.subtitle);
+  set('.codename', b.codename);
+  set('.classified', b.classified);
+  if (b.avatar) document.querySelectorAll('#boot-screen img').forEach(img => img.src = b.avatar);
+}
+
+// ═══════════════════════ STATE ═══════════════════════
+let STATE = loadState();
+
+function loadState() {
+  try {
+    const s = localStorage.getItem('projet1986_state');
+    if (s) return JSON.parse(s);
+  } catch(e) {}
+  return { currentEnigma: 0, solved: [], hintUsed: [], started: false };
+}
+function saveState() {
+  try { localStorage.setItem('projet1986_state', JSON.stringify(STATE)); } catch(e) {}
+}
+
+// ═══════════════════════ AUDIO ═══════════════════════
+let audioCtx = null;
+let gpsWatchId = null;
+let cameraStream = null;
+let torchStream = null; // dedicated stream for torch enigma
+
+function launchBoot() {
+  showScreen('boot-screen');
+  // Lancer la musique après interaction utilisateur
+  const music = document.getElementById('intro-music');
+  music.volume = 0.5;
+  music.play().catch(() => {});
+  runBoot();
+}
+  
+function fadeOutAudio(audio, duration = 1500) {
+  const step = 50;
+  const decay = step / duration;
+  const fade = setInterval(() => {
+    if (audio.volume > decay) {
+      audio.volume -= decay;
+    } else {
+      audio.volume = 0;
+      audio.pause();
+      audio.currentTime = 0;
+      clearInterval(fade);
+    }
+  }, step);
+}
+function getAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); return audioCtx; }
+function playTone(freq, dur, type='sine') {
+  try {
+    const ctx = getAudio(); const osc = ctx.createOscillator(); const gain = ctx.createGain();
+    osc.type = type; osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(); osc.stop(ctx.currentTime + dur);
+  } catch(e) {}
+}
+function playSuccess() { playTone(523,.1); setTimeout(()=>playTone(659,.1),100); setTimeout(()=>playTone(784,.2),200); }
+
+
+  
+function playError() { playTone(200,.3,'sawtooth'); }
+function playBeep() { playTone(880,.05); }
+function playKeyBeep(ok) { playTone(ok?880:220,.15,ok?'sine':'square'); }
+
+// ═══════════════════════ SCREENS ═══════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ═══════════════════════ BOOT ═══════════════════════
+const bootLines = [
+  { text: "Initialisation du système...", cls: "ok", delay: 400 },
+  { text: "Chargement module PROJET_1986", cls: "ok", delay: 600 },
+  { text: "Vérification profil agent", cls: "ok", delay: 800 },
+  { text: "Connexion base de données", cls: "ok", delay: 500 },
+  { text: "Scan biométrique", cls: "warn", delay: 700 },
+  { text: `Calibration énigmes [${TOTAL}/${TOTAL}]`, cls: "ok", delay: 600 },
+  { text: "Chargement module GUADELOUPE", cls: "ok", delay: 400 },
+  { text: "Activation protocole ANNIVERSAIRE", cls: "ok", delay: 500 },
+  { text: "Système prêt", cls: "ok", delay: 300 },
+];
+
+function runBoot() {
+  if (STATE.started && STATE.solved.length > 0) {
+    showHub(); return;
+  }
+  const log = document.getElementById('boot-log');
+  let total = 0;
+  bootLines.forEach((line) => {
+    total += line.delay;
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = `line ${line.cls}`;
+      el.textContent = `> ${line.text}`;
+      log.appendChild(el); playBeep();
+      log.scrollTop = log.scrollHeight;
+    }, total);
+  });
+//  setTimeout(() => {
+//    document.getElementById('boot-buttons').style.display = 'block';
+//    showInstallButton();
+//  }, total + 800);
+ setTimeout(() => {
+    document.getElementById('boot-buttons').style.display = 'block';
+    showInstallButton();
+  }, total + 800);
+}
+
+// ═══════════════════════ GAME START ═══════════════════════
+//function startGame() {
+//  STATE.started = true;
+//  saveState();
+//  showHub();
+//}
+function startGame() {
+  const music = document.getElementById('intro-music');
+  if (!music.paused) fadeOutAudio(music, 4500);
+  STATE.started = true;
+  saveState();
+  showHub();
+}
+
+// ═══════════════════════ HUB ═══════════════════════
+function showHub() {
+  if (gpsWatchId !== null) {
+    navigator.geolocation.clearWatch(gpsWatchId);
+    gpsWatchId = null;
+  }
+  cleanupGPSMap();
+  stopCamera();
+  stopTorch();
+  stopCurrentAudio();
+  showScreen('hub-screen');
+  renderHub();
+}
+
+function getActForIndex(idx) {
+  for (let a = 0; a < ACT_BOUNDARIES.length - 1; a++) {
+    if (idx >= ACT_BOUNDARIES[a] && idx < ACT_BOUNDARIES[a+1]) return a;
+  }
+  return ACTS.length - 1;
+}
+
+function renderHub() {
+  const container = document.getElementById('acts-container');
+  container.innerHTML = '';  
+  const solved = STATE.solved.length;
+  document.getElementById('progress-text').textContent = `${solved}/${TOTAL}`;
+  document.getElementById('progress-bar').style.width = `${(solved/TOTAL)*100}%`;
+
+  ACTS.forEach((act, ai) => {
+    const startIdx = ACT_BOUNDARIES[ai];
+    const endIdx = ACT_BOUNDARIES[ai + 1];
+    const actEnigmas = ENIGMAS.slice(startIdx, endIdx);
+    const allSolved = actEnigmas.every((_, i) => STATE.solved.includes(startIdx + i));
+    const anyAccessible = startIdx <= STATE.currentEnigma;
+
+    const group = document.createElement('div');
+    group.className = 'act-group';
+
+    const title = document.createElement('div');
+    title.className = `act-title ${allSolved ? 'completed' : !anyAccessible ? 'locked' : ''}`;
+    title.innerHTML = `ACTE ${ai+1} — ${act.name} <span class="act-line"></span>`;
+    group.appendChild(title);
+
+    const cards = document.createElement('div');
+    cards.className = 'act-cards';
+    group.appendChild(cards);
+
+    actEnigmas.forEach((e, i) => {
+      const idx = startIdx + i;
+      const isSolved = STATE.solved.includes(idx);
+      const isCurrent = idx === STATE.currentEnigma;
+      const isLocked = idx > STATE.currentEnigma && !isSolved;
+
+      const card = document.createElement('div');
+      card.className = `enigma-card ${isSolved ? 'completed' : isCurrent ? 'current' : isLocked ? 'locked' : ''}`;
+      card.innerHTML = `
+        <div class="enigma-num"><span>${String(idx+1).padStart(2,'0')}</span></div>
+        <div class="enigma-info">
+          <div class="enigma-type">${e.type}</div>
+          <div class="enigma-title-text">${isLocked ? '██████████' : e.title}</div>
+        </div>
+        <div class="enigma-arrow">${isSolved ? '✓' : isCurrent ? '›' : isLocked ? '🔒' : '›'}</div>
+      `;
+      if (!isLocked) card.onclick = () => openEnigma(idx);
+      cards.appendChild(card);
+    });
+    container.appendChild(group);
+  });
+}
+
+// ═══════════════════════ ACT TRANSITION ═══════════════════════
+function showActTransition(actIndex, callback) {
+  const act = ACTS[actIndex];
+  document.getElementById('act-trans-num').textContent = `ACTE ${actIndex + 1}`;
+  document.getElementById('act-trans-name').textContent = act.name;
+  showScreen('act-transition');
+  playTone(440,.2); setTimeout(()=>playTone(660,.3),200);
+  setTimeout(callback, 2500);
+}
+
+// ═══════════════════════ OPEN ENIGMA ═══════════════════════
+function openEnigma(idx) {
+  const e = ENIGMAS[idx];
+  const isSolved = STATE.solved.includes(idx);
+
+  if (e.format === 'fakebug' && !isSolved) {
+    triggerFakeBug(idx); return;
+  }
+
+  if (!isSolved && idx > 0) {
+    const actIdx = getActForIndex(idx);
+    const prevActIdx = getActForIndex(idx - 1);
+    if (actIdx !== prevActIdx && idx === ACT_BOUNDARIES[actIdx]) {
+      showActTransition(actIdx, () => renderEnigmaScreen(idx));
+      return;
+    }
+  }
+
+  renderEnigmaScreen(idx);
+}
+
+function renderEnigmaScreen(idx) {
+  const e = ENIGMAS[idx];
+  const isSolved = STATE.solved.includes(idx);
+  showScreen('enigma-screen');
+  document.getElementById('enigma-label').textContent = `ÉNIGME ${String(idx+1).padStart(2,'0')}/${TOTAL}`;
+  document.getElementById('enigma-type-label').textContent = e.type.toUpperCase();
+
+  const body = document.getElementById('enigma-body');
+  body.innerHTML = '';
+  body.dataset.idx = idx;
+
+  if (e.narrative) {
+    const narr = document.createElement('div');
+    narr.className = 'enigma-narrative';
+    narr.textContent = e.narrative;
+    body.appendChild(narr);
+  }
+
+  if (e.question) {
+    const q = document.createElement('div');
+    q.className = 'enigma-question';
+    q.textContent = e.question;
+    body.appendChild(q);
+  }
+
+  if (e.image) {
+    const img = document.createElement("img");
+    img.src = e.image;
+    img.style.maxWidth = "100%";
+    img.style.margin = "16px 0";
+    body.appendChild(img);
+  }
+  
+  if (e.image2) {
+    const img = document.createElement("img");
+    img.src = e.image2;
+    img.style.maxWidth = "65%";
+    img.style.margin = "0px 0";
+    body.appendChild(img);
+  }
+
+  if (e.iframe) {
+    const iframe = document.createElement("iframe");
+    iframe.src = e.iframe;
+    iframe.width = "350px";
+    iframe.height = "100%";
+    iframe.style.border = "none";
+    iframe.style.margin = "0px 0";
+    body.appendChild(iframe);
+  }
+
+   if (e.iframe2) {
+    const iframe = document.createElement("iframe");
+    iframe.src = e.iframe2;
+    iframe.width = "220px";
+    iframe.height = "100%";
+    iframe.style.border = "none";
+    iframe.style.margin = "0px 0";    
+    body.appendChild(iframe);
+  }
+
+  if (isSolved) {
+    const banner = document.createElement('div');
+    banner.className = 'solved-banner';
+    banner.innerHTML = `✓ ÉPREUVE VALIDÉE`;
+    if (e.answer && e.answer[0] !== 'ok') {
+      banner.innerHTML += `<div class="solved-answer">${e.answer[0].toUpperCase()}</div>`;
+    }
+    body.appendChild(banner);
+    document.getElementById('hint-btn').style.display = 'none';
+    return;
+  }
+
+  document.getElementById('hint-btn').style.display = STATE.hintUsed.includes(idx) ? 'none' : '';
+  window._currentHint = e.hint;
+  window._currentIdx = idx;
+
+  if (STATE.hintUsed.includes(idx)) {
+    const hint = document.createElement('div');
+    hint.className = 'enigma-narrative';
+    hint.style.borderLeftColor = 'var(--warn)';
+    hint.style.background = 'var(--warn-dim)';
+    hint.style.color = 'var(--warn)';
+    hint.textContent = '💡 INDICE : ' + e.hint;
+    body.appendChild(hint);
+  }
+
+  switch (e.format) {
+    case 'text': renderTextInput(body, idx); break;
+    case 'lightdetect': renderLightDetect(body, idx); break;
+    case 'torch': renderTorch(body, idx); break;
+    case 'rebus': renderRebus(body, idx); break;
+    case 'audio': renderAudioPlayer(body, idx); break;
+    case 'gps': renderGPS(body, idx); break;
+    case 'nfc': renderNFC(body, idx); break;
+    case 'keypad': renderKeypad(body, idx); break;
+    case 'camera': renderCamera(body, idx); break;
+    case 'puzzle': renderPuzzle(body, idx); break;
+  }
+}
+
+// ═══════════════════════ LIGHT DETECT ═══════════════════════
+function renderLightDetect(container, idx) {
+  const module = document.createElement('div');
+  module.className = 'torch-module';
+  module.innerHTML = `
+    <div class="torch-zone" id="light-zone">
+      <div class="torch-icon">🔦</div>
+      <div class="torch-label">EN ATTENTE DE LUMIÈRE</div>
+    </div>
+    <div class="torch-status" id="light-status">
+      Pointez la caméra vers une source de lumière intense<br>
+      <span style="font-size:.5rem;color:var(--text-dim)">(lampe, soleil, écran lumineux...)</span>
+    </div>
+    <div class="feedback-msg" id="feedback"></div>
+    <div id="light-fallback" style="display:none;margin-top:14px;">
+      <button class="torch-fallback-btn" id="light-fallback-btn">
+        🔦 VALIDER MANUELLEMENT
+      </button>
+    </div>
+  `;
+  container.appendChild(module);
+
+  const zone = document.getElementById('light-zone');
+  const status = document.getElementById('light-status');
+  const feedback = document.getElementById('feedback');
+  let detected = false;
+
+  function onLightDetected() {
+    zone.classList.remove('active');
+    zone.classList.add('success');
+    zone.querySelector('.torch-icon').textContent = '✅';
+    zone.querySelector('.torch-label').textContent = 'LUMIÈRE DÉTECTÉE';
+    status.innerHTML = '<span style="color:var(--success)">✓ LUMIÈRE DÉTECTÉE — MODULE DÉVERROUILLÉ</span>';
+    feedback.className = 'feedback-msg success';
+    feedback.textContent = '✓ ACCÈS AUTORISÉ';
+    playSuccess();
+    setTimeout(() => solveEnigma(idx), 1500);
+  }
+
+  function showFallback() {
+    document.getElementById('light-fallback').style.display = 'block';
+    document.getElementById('light-fallback-btn').onclick = () => {
+      document.getElementById('light-fallback-btn').disabled = true;
+      document.getElementById('light-fallback-btn').textContent = '⏳ VÉRIFICATION...';
+      setTimeout(() => onLightDetected(), 1500);
+    };
+  }
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    showFallback();
+    return;
+  }
+
+  zone.classList.add('active');
+  zone.querySelector('.torch-label').textContent = 'CAPTEUR ACTIF...';
+
+  const video = document.createElement('video');
+  video.setAttribute('autoplay', '');
+  video.setAttribute('playsinline', '');
+  video.setAttribute('muted', '');
+  video.style.display = 'none';
+  document.body.appendChild(video);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 64;
+  canvas.height = 64;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+  navigator.mediaDevices.getUserMedia({
+    video: { facingMode: 'environment', width: 64, height: 64 },
+    audio: false
+  }).then(stream => {
+    video.srcObject = stream;
+    video.play();
+
+    let baseBrightness = null;
+    let samples = [];
+
+    const interval = setInterval(() => {
+      if (detected) {
+        clearInterval(interval);
+        stream.getTracks().forEach(t => t.stop());
+        video.remove();
+        return;
+      }
+
+      ctx.drawImage(video, 0, 0, 64, 64);
+      const data = ctx.getImageData(0, 0, 64, 64).data;
+
+      let sum = 0;
+      for (let i = 0; i < data.length; i += 4) {
+        sum += (data[i] + data[i + 1] + data[i + 2]) / 3;
+      }
+      const avg = sum / (64 * 64);
+
+      // Calibration (10 premières mesures)
+      if (samples.length < 10) {
+        samples.push(avg);
+        baseBrightness = samples.reduce((a, b) => a + b, 0) / samples.length;
+        status.innerHTML = `Calibration... <span style="color:var(--accent)">${Math.round(avg)}/255</span>`;
+        return;
+      }
+
+      const target = Math.round(baseBrightness * 1.5);
+
+      status.innerHTML = `Luminosité : <span style="color:var(--accent)">${Math.round(avg)}/255</span><br>
+        Objectif : <span style="color:var(--accent)">${target}/255</span><br>
+        <span style="font-size:.5rem;color:var(--text-dim)">Pointez droit vers une lampe ou le soleil</span>`;
+
+      if (avg > baseBrightness * 1.5) {
+        detected = true;
+        clearInterval(interval);
+        stream.getTracks().forEach(t => t.stop());
+        video.remove();
+        onLightDetected();
+      }
+    }, 200);
+
+    setTimeout(() => {
+      if (!detected) showFallback();
+    }, 30000);
+
+  }).catch(err => {
+    console.error('Camera error:', err);
+    showFallback();
+  });
+
+  setTimeout(() => {
+    if (!detected) showFallback();
+  }, 5000);
+}
+  
+// ═══════════════════════ TEXT INPUT ═══════════════════════
+function renderTextInput(container, idx) {
+  const section = document.createElement('div');
+  section.className = 'answer-section';
+  section.innerHTML = `
+    <div class="feedback-msg" id="feedback"></div>
+    <div class="answer-input-wrap">
+      <input class="answer-input" id="answer-field" type="text" placeholder="Votre réponse..." autocomplete="off" autocapitalize="off">
+      <button class="submit-btn" onclick="checkTextAnswer(${idx})">VALIDER</button>
+    </div>
+  `;
+  container.appendChild(section);
+
+  document.getElementById('answer-field').addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter') checkTextAnswer(idx);
+  });
+}
+
+function normalize(s) {
+  return s.toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ');
+}
+
+function checkTextAnswer(idx) {
+  const field = document.getElementById('answer-field');
+  const feedback = document.getElementById('feedback');
+  const val = normalize(field.value);
+  if (!val) return;
+  const e = ENIGMAS[idx];
+  const correct = e.answer.some(a => {
+    const na = normalize(a);
+    return na === val || val.includes(na) || na.includes(val);
+  });
+  if (correct) {
+    feedback.className = 'feedback-msg success';
+    feedback.textContent = '✓ ACCÈS AUTORISÉ';
+    playSuccess();
+    setTimeout(() => solveEnigma(idx), 1000);
+  } else {
+    feedback.className = 'feedback-msg error';
+    feedback.textContent = '✗ RÉPONSE INCORRECTE';
+    playError();
+    field.value = '';
+    setTimeout(() => { feedback.className = 'feedback-msg'; }, 2000);
+  }
+}
+
+// ═══════════════════════ TORCH (Enigma 3) ═══════════════════════
+function stopTorch() {
+  if (torchStream) {
+    torchStream.getTracks().forEach(t => t.stop());
+    torchStream = null;
+  }
+}
+
+function renderTorch(container, idx) {
+  const module = document.createElement('div');
+  module.className = 'torch-module';
+
+  module.innerHTML = `
+    <div class="torch-zone" id="torch-zone">
+      <div class="torch-icon">🔦</div>
+      <div class="torch-label">APPUYEZ POUR ALLUMER</div>
+    </div>
+    <div class="torch-status" id="torch-status">
+      Activez le flash de votre téléphone pour réactiver le module.
+    </div>
+    <div class="feedback-msg" id="feedback"></div>
+    <div class="torch-fallback" id="torch-fallback" style="display:none;">
+      <div style="font-family:var(--font-mono);font-size:.55rem;color:var(--text-dim);margin-bottom:8px;letter-spacing:1px;">
+        Flash non supporté sur cet appareil ?
+      </div>
+      <button class="torch-fallback-btn" id="torch-fallback-btn">
+        🔦 J'AI ALLUMÉ MA TORCHE MANUELLEMENT
+      </button>
+    </div>
+  `;
+  container.appendChild(module);
+
+  const zone = document.getElementById('torch-zone');
+  const status = document.getElementById('torch-status');
+  const feedback = document.getElementById('feedback');
+  const fallbackWrap = document.getElementById('torch-fallback');
+  const fallbackBtn = document.getElementById('torch-fallback-btn');
+  let torchOn = false;
+
+  zone.addEventListener('click', async () => {
+    if (torchOn) return;
+
+    // Check if torch API is supported
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      showTorchFallback();
+      return;
+    }
+
+    zone.querySelector('.torch-label').textContent = 'ACTIVATION...';
+    status.textContent = 'Demande d\'accès à la caméra...';
+    playTone(440, .1);
+
+    try {
+      // Request camera with torch
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: 'environment',
+          width: { ideal: 640 },
+          height: { ideal: 480 }
+        }
+      });
+
+      torchStream = stream;
+      const track = stream.getVideoTracks()[0];
+
+      // Check if torch is supported on this track
+      const capabilities = track.getCapabilities ? track.getCapabilities() : {};
+      if (!capabilities.torch) {
+        // Torch not supported, stop stream and show fallback
+        stream.getTracks().forEach(t => t.stop());
+        torchStream = null;
+        showTorchFallback();
+        return;
+      }
+
+      // Turn on the torch!
+      await track.applyConstraints({
+        advanced: [{ torch: true }]
+      });
+
+      torchOn = true;
+      zone.classList.add('active');
+      zone.querySelector('.torch-icon').textContent = '💡';
+      zone.querySelector('.torch-label').textContent = 'FLASH ACTIVÉ';
+      status.innerHTML = '<span style="color:var(--gold)">💡 Torche allumée ! Vérification en cours...</span>';
+      playTone(660, .15);
+
+      // Short delay then validate
+      setTimeout(() => {
+        zone.classList.remove('active');
+        zone.classList.add('success');
+        zone.querySelector('.torch-icon').textContent = '✅';
+        zone.querySelector('.torch-label').textContent = 'MODULE RÉACTIVÉ';
+        status.innerHTML = '<span style="color:var(--success)">✓ LUMIÈRE DÉTECTÉE — MODULE DÉVERROUILLÉ</span>';
+        feedback.className = 'feedback-msg success';
+        feedback.textContent = '✓ ACCÈS AUTORISÉ';
+        playSuccess();
+
+        // Turn off torch after success
+        setTimeout(() => {
+          stopTorch();
+          solveEnigma(idx);
+        }, 1500);
+      }, 2000);
+
+    } catch (err) {
+      console.error('Torch error:', err);
+
+      if (err.name === 'NotAllowedError') {
+        status.innerHTML = '<span style="color:var(--warn)">⚠ Accès caméra refusé. Autorisez dans les paramètres.</span>';
+        zone.querySelector('.torch-label').textContent = 'APPUYEZ POUR RÉESSAYER';
+      } else if (err.name === 'NotFoundError' || err.name === 'NotReadableError') {
+        showTorchFallback();
+      } else {
+        showTorchFallback();
+      }
+    }
+  });
+
+  // Fallback button: manual confirmation
+  fallbackBtn.addEventListener('click', () => {
+    fallbackBtn.disabled = true;
+    fallbackBtn.textContent = '⏳ VÉRIFICATION...';
+    playTone(440, .1);
+
+    setTimeout(() => {
+      zone.classList.add('success');
+      zone.querySelector('.torch-icon').textContent = '✅';
+      zone.querySelector('.torch-label').textContent = 'MODULE RÉACTIVÉ';
+      status.innerHTML = '<span style="color:var(--success)">✓ CONFIRMATION ACCEPTÉE — MODULE DÉVERROUILLÉ</span>';
+      feedback.className = 'feedback-msg success';
+      feedback.textContent = '✓ ACCÈS AUTORISÉ';
+      playSuccess();
+
+      setTimeout(() => solveEnigma(idx), 1500);
+    }, 1500);
+  });
+
+  function showTorchFallback() {
+    zone.querySelector('.torch-label').textContent = 'FLASH NON DISPONIBLE';
+    zone.querySelector('.torch-icon').textContent = '⚠️';
+    status.innerHTML = '<span style="color:var(--warn)">Le flash n\'est pas accessible sur cet appareil.</span><br><span style="color:var(--text-dim)">Allumez votre torche manuellement, puis confirmez ci-dessous.</span>';
+    fallbackWrap.style.display = 'block';
+    playError();
+  }
+}
+
+// ═══════════════════════ REBUS ═══════════════════════
+function renderRebus(container, idx) {
+  const e = ENIGMAS[idx];
+  const wrap = document.createElement('div');
+  wrap.className = 'rebus-container';
+  e.rebusItems.forEach((item, i) => {
+    if (i > 0) wrap.innerHTML += `<div class="rebus-plus">+</div>`;
+    wrap.innerHTML += `<div class="rebus-item">${item}</div>`;
+  });
+  wrap.innerHTML += `<div class="rebus-equals">=</div><div class="rebus-answer-slot">?</div>`;
+  container.appendChild(wrap);
+  if (e.rebusHint) {
+    const h = document.createElement('div');
+    h.style.cssText = 'text-align:center;font-size:.75rem;color:var(--text-dim);font-family:var(--font-mono);margin-top:8px;';
+    h.textContent = e.rebusHint;
+    container.appendChild(h);
+  }
+  renderTextInput(container, idx);
+}
+
+// ═══════════════════════ AUDIO (Unified) ═══════════════════════
+let waveInterval = null;
+let currentAudio = null;
+
+function stopCurrentAudio() {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+  }
+  stopWaveAnim();
+}
+
+function toggleAudio(audioId, btnId) {
+  const audio = document.getElementById(audioId);
+  const btn = document.getElementById(btnId);
+
+  if (!audio) return;
+
+  if (currentAudio && currentAudio !== audio) {
+    stopCurrentAudio();
+  }
+
+  if (audio.paused) {
+    audio.play();
+    currentAudio = audio;
+    btn.textContent = '⏸';
+    startWaveAnim(audioId);
+  } else {
+    audio.pause();
+    btn.textContent = '▶';
+    stopWaveAnim();
+  }
+}
+
+function setSpeed(audioId, speed, btnGroupId) {
+  const audio = document.getElementById(audioId);
+  if (!audio) return;
+
+  audio.playbackRate = speed;
+
+  const group = document.getElementById(btnGroupId);
+  if (group) {
+    group.querySelectorAll('.speed-btn').forEach(btn => {
+      btn.classList.remove('active');
+      if (btn.dataset.speed == speed) {
+        btn.classList.add('active');
+      }
+    });
+  }
+}
+
+function startWaveAnim(audioId) {
+  stopWaveAnim();
+  const wave = document.getElementById(`audio-wave-${audioId}`);
+  if (!wave) return;
+
+  waveInterval = setInterval(() => {
+    wave.querySelectorAll('.bar').forEach(bar => {
+      bar.style.height = (10 + Math.random() * 40) + 'px';
+    });
+  }, 200);
+}
+
+function stopWaveAnim() {
+  clearInterval(waveInterval);
+  waveInterval = null;
+}
+
+function renderAudioPlayer(container, idx) {
+  const e = ENIGMAS[idx];
+  const audioId = e.audioId;
+
+  const {
+    hasWave = false,
+    hasSpeedControl = false,
+    hasDownload = false
+  } = e;
+
+  const player = document.createElement('div');
+  player.className = 'audio-player';
+
+  let barsHtml = '';
+  if (hasWave) {
+    barsHtml = `<div class="audio-wave" id="audio-wave-${audioId}">`;
+    for (let i = 0; i < 30; i++) {
+      barsHtml += `<div class="bar" style="height:${10 + Math.random() * 40}px"></div>`;
+    }
+    barsHtml += `</div>`;
+  }
+
+  const speedControlsHtml = hasSpeedControl ? `
+    <div class="audio-controls" id="speed-group-${audioId}" style="margin-top:12px">
+      <button class="speed-btn" data-speed="0.5" onclick="setSpeed('${audioId}', 0.5, 'speed-group-${audioId}')">×0.5</button>
+      <button class="speed-btn active" data-speed="1" onclick="setSpeed('${audioId}', 1, 'speed-group-${audioId}')">×1</button>
+      <button class="speed-btn" data-speed="1.5" onclick="setSpeed('${audioId}', 1.5, 'speed-group-${audioId}')">×1.5</button>
+    </div>
+  ` : '';
+
+  const downloadHtml = hasDownload ? `
+    <div class="audio-download" style="margin-top:8px">
+      <a href="TON_LIEN_ICI" download>⬇️</a>
+    </div>
+  ` : '';
+
+  player.innerHTML = `
+    ${barsHtml}
+
+    <div class="audio-controls">
+      <button class="play-btn" id="play-btn-${audioId}" onclick="toggleAudio('${audioId}', 'play-btn-${audioId}')">▶</button>
+    </div>
+
+    ${speedControlsHtml}
+
+    <div class="audio-status">PRÊT — APPUYEZ SUR ▶</div>
+
+    ${downloadHtml}
+  `;
+
+  container.appendChild(player);
+
+  renderTextInput(container, idx);
+}
+
+// ═══════════════════════ GPS ═══════════════════════
+let gpsMap = null;
+let gpsPlayerMarker = null;
+let gpsAccuracyCircle = null;
+let gpsTargetZone = null;
+
+function haversineDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const toRad = x => x * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function bearingTo(lat1, lon1, lat2, lon2) {
+  const toRad = x => x * Math.PI / 180;
+  const toDeg = x => x * 180 / Math.PI;
+  const dLon = toRad(lon2 - lon1);
+  const y = Math.sin(dLon) * Math.cos(toRad(lat2));
+  const x = Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) - Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLon);
+  return (toDeg(Math.atan2(y, x)) + 360) % 360;
+}
+
+function distToZoom(dist) {
+  const MAX_DIST = 10000;
+  const MIN_ZOOM = 19;
+  const MAX_ZOOM = 22;
+  const clamped = Math.max(50, Math.min(dist, MAX_DIST));
+  const t = 1 - Math.log(clamped / 50) / Math.log(MAX_DIST / 50);
+  return MIN_ZOOM + t * (MAX_ZOOM - MIN_ZOOM);
+}
+
+function updateEdgeBlip(lat, lng, targetLat, targetLng, dist) {
+  const blip = document.getElementById('gps-edge-blip');
+  const label = document.getElementById('gps-edge-dist');
+  if (!blip || !gpsMap) return;
+
+  const targetPoint = gpsMap.latLngToContainerPoint([targetLat, targetLng]);
+  const mapSize = gpsMap.getSize();
+  const cx = mapSize.x / 2;
+  const cy = mapSize.y / 2;
+  const radius = Math.min(cx, cy);
+  const dx = targetPoint.x - cx;
+  const dy = targetPoint.y - cy;
+  const distFromCenter = Math.sqrt(dx*dx + dy*dy);
+
+  if (distFromCenter < radius - 15) {
+    blip.style.display = 'none';
+    label.style.display = 'none';
+    return;
+  }
+
+  const bearing = bearingTo(lat, lng, targetLat, targetLng);
+  const angleRad = (bearing - 90) * Math.PI / 180;
+  const edgeR = 122;
+  const bx = 130 + edgeR * Math.cos(angleRad);
+  const by = 130 + edgeR * Math.sin(angleRad);
+
+  blip.style.display = 'block';
+  blip.style.left = bx + 'px';
+  blip.style.top = by + 'px';
+
+  const arrow = blip.querySelector('.edge-arrow');
+  if (arrow) arrow.style.transform = `translateX(-50%) rotate(${bearing}deg)`;
+
+  const labelR = edgeR - 18;
+  const lx = 130 + labelR * Math.cos(angleRad);
+  const ly = 130 + labelR * Math.sin(angleRad);
+  const distText = dist > 1000 ? (dist/1000).toFixed(1) + 'km' : Math.round(dist) + 'm';
+  label.style.display = 'block';
+  label.style.left = lx + 'px';
+  label.style.top = ly + 'px';
+  label.textContent = distText;
+
+  const color = dist <= 500 ? '#00ff88' : dist <= 1000 ? '#ffd700' : '#ff3366';
+  blip.style.background = color;
+  blip.style.boxShadow = `0 0 10px ${color}, 0 0 20px ${color}44`;
+  arrow.style.borderBottomColor = color;
+  label.style.color = color;
+}
+
+function renderGPS(container, idx) {
+  const e = ENIGMAS[idx];
+  const module = document.createElement('div');
+  module.className = 'gps-module';
+  module.innerHTML = `
+    <div class="gps-map-wrap">
+      <div id="gps-map" style="width:100%;height:100%;"></div>
+      <div class="gps-map-overlay">
+        <div class="sweep-line"></div>
+        <div class="crosshair-h"></div>
+        <div class="crosshair-v"></div>
+        <div class="ring-overlay"></div>
+        <div class="ring-overlay"></div>
+        <div class="ring-overlay"></div>
+        <div class="scan-label">SCAN ACTIF</div>
+      </div>
+      <div class="gps-edge-blip" id="gps-edge-blip"><div class="edge-arrow"></div></div>
+      <div class="gps-edge-dist" id="gps-edge-dist"></div>
+    </div>
+    <div class="gps-distance-wrap">
+      <div class="gps-distance-bar"><div class="gps-distance-fill" id="gps-fill"></div></div>
+      <div class="gps-distance-label">
+        <span class="gps-distance-value" id="gps-dist-val">— m</span>
+        <span class="gps-distance-status" id="gps-dist-status">EN ATTENTE</span>
+      </div>
+    </div>
+    <div class="gps-status" id="gps-status">Activez la géolocalisation pour détecter le signal.</div>
+    <button class="gps-btn-locate" id="gps-btn" onclick="startGPSTracking(${idx})">
+      <span class="spinner" id="gps-spinner"></span>
+      📍 ACTIVER LE SCAN GPS
+    </button>
+    <div id="gps-secret-zone"></div>
+  `;
+  container.appendChild(module);
+
+  setTimeout(() => {
+    const TARGET = e.gpsTarget;
+    gpsMap = L.map('gps-map', {
+      center: [TARGET.lat, TARGET.lng],
+      zoom: 15,
+      zoomControl: false,
+      attributionControl: false,
+      dragging: false,
+      touchZoom: false,
+      scrollWheelZoom: false,
+      doubleClickZoom: false,
+      boxZoom: false,
+      keyboard: false,
+      tap: false,
+    });
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 20,
+    }).addTo(gpsMap);
+
+    gpsTargetZone = L.circle([TARGET.lat, TARGET.lng], {
+      radius: e.gpsRadius,
+      color: '#00f0ff',
+      weight: 1,
+      opacity: 0.5,
+      fillColor: '#00f0ff',
+      fillOpacity: 0.06,
+      dashArray: '6 4',
+    }).addTo(gpsMap);
+
+    const targetIcon = L.divIcon({
+      className: '',
+      html: `<div style="
+        width:14px;height:14px;
+        border:2px solid #00f0ff;
+        border-radius:50%;
+        background:rgba(0,240,255,.15);
+        box-shadow:0 0 12px rgba(0,240,255,.4);
+      "></div>`,
+      iconSize: [14, 14],
+      iconAnchor: [7, 7],
+    });
+    L.marker([TARGET.lat, TARGET.lng], { icon: targetIcon, interactive: false }).addTo(gpsMap);
+  }, 100);
+}
+
+function cleanupGPSMap() {
+  if (gpsMap) { gpsMap.remove(); gpsMap = null; }
+  gpsPlayerMarker = null;
+  gpsAccuracyCircle = null;
+  gpsTargetZone = null;
+}
+
+window.startGPSTracking = function(idx) {
+  const e = ENIGMAS[idx];
+  const TARGET = e.gpsTarget;
+  const RADIUS = e.gpsRadius;
+  const SECRET = e.gpsSecret;
+  const btn = document.getElementById('gps-btn');
+  const status = document.getElementById('gps-status');
+
+  if (!navigator.geolocation) {
+    status.innerHTML = '<span style="color:var(--warn)">⚠ Géolocalisation non supportée.</span>';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner" style="display:inline-block"></span> SCAN EN COURS...';
+  status.textContent = 'Recherche du signal GPS...';
+  playTone(440, .15);
+
+  if (gpsWatchId !== null) navigator.geolocation.clearWatch(gpsWatchId);
+
+  let revealed = false;
+
+  gpsWatchId = navigator.geolocation.watchPosition(
+    (pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      const acc = Math.round(pos.coords.accuracy);
+      const dist = haversineDistance(lat, lng, TARGET.lat, TARGET.lng);
+
+      if (gpsMap) {
+        if (!gpsPlayerMarker) {
+          const playerIcon = L.divIcon({
+            className: '',
+            html: `<div id="player-dot" style="
+              width:16px;height:16px;
+              background:#00f0ff;
+              border-radius:50%;
+              border:3px solid #0a0a0f;
+              box-shadow:0 0 0 0 rgba(0,240,255,.6);
+              animation: playerPulse 2s infinite;
+            "></div>`,
+            iconSize: [16, 16],
+            iconAnchor: [8, 8],
+          });
+          gpsPlayerMarker = L.marker([lat, lng], { icon: playerIcon, zIndexOffset: 1000 }).addTo(gpsMap);
+
+          gpsAccuracyCircle = L.circle([lat, lng], {
+            radius: acc,
+            color: '#00f0ff',
+            weight: 1,
+            opacity: 0.3,
+            fillColor: '#00f0ff',
+            fillOpacity: 0.05,
+          }).addTo(gpsMap);
+        } else {
+          gpsPlayerMarker.setLatLng([lat, lng]);
+          gpsAccuracyCircle.setLatLng([lat, lng]);
+          gpsAccuracyCircle.setRadius(acc);
+        }
+
+        if (gpsMap) {
+          gpsMap.setView([lat, lng], distToZoom(dist), { animate: true, duration: 1 });
+          updateEdgeBlip(lat, lng, TARGET.lat, TARGET.lng, dist);
+        }
+
+        if (gpsTargetZone) {
+          if (dist <= RADIUS) {
+            gpsTargetZone.setStyle({ color: '#00ff88', fillColor: '#00ff88', fillOpacity: 0.15 });
+          } else if (dist <= RADIUS * 2) {
+            gpsTargetZone.setStyle({ color: '#ffd700', fillColor: '#ffd700', fillOpacity: 0.1 });
+          } else {
+            gpsTargetZone.setStyle({ color: '#00f0ff', fillColor: '#00f0ff', fillOpacity: 0.06 });
+          }
+        }
+      }
+
+      updateDistanceBar(dist, RADIUS);
+
+      const distDisplay = dist > 1000 ? (dist/1000).toFixed(1) + ' km' : Math.round(dist) + ' m';
+      document.getElementById('gps-dist-val').textContent = distDisplay;
+
+      if (dist <= RADIUS && !revealed) {
+        revealed = true;
+        navigator.geolocation.clearWatch(gpsWatchId);
+        gpsWatchId = null;
+        btn.style.display = 'none';
+
+        status.innerHTML = '<span style="color:var(--success)">✓ SIGNAL DÉCRYPTÉ — ZONE ATTEINTE</span>';
+        document.getElementById('gps-dist-status').textContent = 'DANS LA ZONE';
+        document.getElementById('gps-dist-status').style.color = 'var(--success)';
+
+        playSuccess();
+
+        if (gpsTargetZone) gpsTargetZone.setStyle({ fillOpacity: 0.3 });
+        const eb = document.getElementById('gps-edge-blip');
+        const ed = document.getElementById('gps-edge-dist');
+        if (eb) eb.style.display = 'none';
+        if (ed) ed.style.display = 'none';
+
+        const zone = document.getElementById('gps-secret-zone');
+        zone.innerHTML = `
+          <div class="gps-secret-reveal">
+            <div class="label">/// CODE DÉCRYPTÉ ///</div>
+            <div class="code">${SECRET}</div>
+          </div>
+        `;
+        const body = document.getElementById('enigma-body');
+        renderTextInput(body, idx);
+
+      } else if (dist <= RADIUS * 2) {
+        status.innerHTML = `<span style="color:var(--success)">🔥 TRÈS PROCHE !</span><br><span style="font-size:.5rem;color:var(--text-dim)">Précision : ±${acc}m</span>`;
+        document.getElementById('gps-dist-status').textContent = 'SIGNAL FORT';
+        document.getElementById('gps-dist-status').style.color = 'var(--success)';
+      } else if (dist <= RADIUS * 5) {
+        status.innerHTML = `<span style="color:var(--gold)">📡 Signal détecté. Rapprochez-vous.</span><br><span style="font-size:.5rem;color:var(--text-dim)">Précision : ±${acc}m</span>`;
+        document.getElementById('gps-dist-status').textContent = 'SIGNAL MOYEN';
+        document.getElementById('gps-dist-status').style.color = 'var(--gold)';
+      } else {
+        status.innerHTML = `<span style="color:var(--warn)">📡 Signal faible. Déplacez-vous.</span><br><span style="font-size:.5rem;color:var(--text-dim)">Précision : ±${acc}m</span>`;
+        document.getElementById('gps-dist-status').textContent = 'SIGNAL FAIBLE';
+        document.getElementById('gps-dist-status').style.color = 'var(--warn)';
+      }
+
+      if (!revealed) {
+        playTone(800 - Math.min(dist/5, 600), .05);
+      }
+    },
+    (err) => {
+      console.error('GPS error:', err);
+      btn.disabled = false;
+      btn.innerHTML = '📍 RÉESSAYER';
+      if (err.code === 1) {
+        status.innerHTML = '<span style="color:var(--warn)">⚠ Accès GPS refusé. Autorisez la géolocalisation dans les paramètres.</span>';
+      } else if (err.code === 2) {
+        status.innerHTML = '<span style="color:var(--warn)">⚠ Position indisponible. Sortez à l\'extérieur.</span>';
+      } else {
+        status.innerHTML = '<span style="color:var(--warn)">⚠ Timeout GPS. Réessayez en extérieur.</span>';
+      }
+    },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+  );
+};
+
+function updateDistanceBar(dist, radius) {
+  const fill = document.getElementById('gps-fill');
+  if (!fill) return;
+  const maxDist = radius * 10;
+  const pct = Math.max(0, Math.min(100, (1 - dist / maxDist) * 100));
+  fill.style.width = pct + '%';
+  if (dist <= radius) {
+    fill.style.background = 'linear-gradient(90deg, var(--success), #00ffaa)';
+  } else if (dist <= radius * 2) {
+    fill.style.background = 'linear-gradient(90deg, var(--gold), #ffaa00)';
+  } else if (dist <= radius * 5) {
+    fill.style.background = 'linear-gradient(90deg, #ff8800, var(--gold))';
+  } else {
+    fill.style.background = 'linear-gradient(90deg, var(--warn), #ff6644)';
+  }
+}
+
+// ═══════════════════════ CAMERA (Pixel Processing) ═══════════════════════
+let camAnimFrame = null;
+let camActiveFilter = null;
+
+function stopCamera() {
+  if (camAnimFrame) { cancelAnimationFrame(camAnimFrame); camAnimFrame = null; }
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(t => t.stop());
+    cameraStream = null;
+  }
+  camActiveFilter = null;
+}
+
+function renderCamera(container, idx) {
+  const module = document.createElement('div');
+  module.className = 'camera-module';
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    module.innerHTML = `
+      <div class="camera-no-support">
+        📷<br>Caméra non supportée sur ce navigateur.<br>
+        Essayez avec Chrome sur mobile.
+      </div>
+    `;
+    container.appendChild(module);
+    renderTextInput(container, idx);
+    return;
+  }
+
+  module.innerHTML = `
+    <div class="camera-viewfinder" id="cam-viewfinder">
+      <video id="cam-video" autoplay playsinline muted></video>
+      <canvas id="cam-canvas"></canvas>
+      <div class="camera-scanline"></div>
+      <div class="camera-hud">
+        <div class="rec">REC</div>
+        <div class="filter-label" id="cam-filter-label" style="color:var(--text-dim)">NORMAL</div>
+      </div>
+    </div>
+    <div class="camera-controls">
+      <button class="cam-filter-btn active" data-ch="off" onclick="setCamFilter(null)">
+        <span class="dot"></span> OFF
+      </button>
+      <button class="cam-filter-btn" data-ch="r" onclick="setCamFilter('r')">
+        <span class="dot"></span> R
+      </button>
+      <button class="cam-filter-btn" data-ch="g" onclick="setCamFilter('g')">
+        <span class="dot"></span> G
+      </button>
+      <button class="cam-filter-btn" data-ch="b" onclick="setCamFilter('b')">
+        <span class="dot"></span> B
+      </button>
+      <button class="camera-flip" onclick="flipCamera()">🔄</button>
+    </div>
+    <div class="camera-instructions">
+      Sélectionnez un filtre couleur puis pointez la caméra<br>
+      vers le document pour révéler le message caché.
+    </div>
+  `;
+  container.appendChild(module);
+
+  window._camFacingMode = 'environment';
+  camActiveFilter = null;
+  startCamera();
+
+  renderTextInput(container, idx);
+}
+
+function startCamera() {
+  if (camAnimFrame) { cancelAnimationFrame(camAnimFrame); camAnimFrame = null; }
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(t => t.stop());
+    cameraStream = null;
+  }
+
+  const video = document.getElementById('cam-video');
+  const canvas = document.getElementById('cam-canvas');
+  if (!video || !canvas) return;
+
+  navigator.mediaDevices.getUserMedia({
+    video: { facingMode: window._camFacingMode, width: { ideal: 640 }, height: { ideal: 480 } },
+    audio: false
+  })
+  .then(stream => {
+    cameraStream = stream;
+    video.srcObject = stream;
+    video.play().catch(() => {});
+
+    video.onloadedmetadata = () => {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      processFrame();
+    };
+  })
+  .catch(err => {
+    console.error('Camera error:', err);
+    const vf = document.getElementById('cam-viewfinder');
+    if (vf) vf.innerHTML = `
+      <div class="camera-no-support">
+        📷<br>Impossible d'accéder à la caméra.<br>
+        ${err.name === 'NotAllowedError' ? 'Autorisez l\'accès caméra dans les paramètres.' : 'Erreur : ' + err.message}
+      </div>
+    `;
+  });
+}
+
+function processFrame() {
+  const video = document.getElementById('cam-video');
+  const canvas = document.getElementById('cam-canvas');
+  if (!video || !canvas || !cameraStream) return;
+
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+  function draw() {
+    if (!cameraStream) return;
+
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    if (camActiveFilter) {
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const d = imageData.data;
+
+      for (let i = 0; i < d.length; i += 4) {
+        const r = d[i], g = d[i+1], b = d[i+2];
+
+        if (camActiveFilter === 'r') {
+          d[i]   = r;
+          d[i+1] = r * 0.15;
+          d[i+2] = r * 0.1;
+        } else if (camActiveFilter === 'g') {
+          d[i]   = g * 0.15;
+          d[i+1] = g;
+          d[i+2] = g * 0.1;
+        } else if (camActiveFilter === 'b') {
+          d[i]   = b * 0.1;
+          d[i+1] = b * 0.15;
+          d[i+2] = b;
+        }
+      }
+
+      ctx.putImageData(imageData, 0, 0);
+    }
+
+    camAnimFrame = requestAnimationFrame(draw);
+  }
+
+  draw();
+}
+
+window.setCamFilter = function(ch) {
+  camActiveFilter = ch;
+  const label = document.getElementById('cam-filter-label');
+
+  document.querySelectorAll('.cam-filter-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.ch === (ch || 'off'));
+  });
+
+  if (!ch) {
+    label.textContent = 'NORMAL';
+    label.style.color = 'var(--text-dim)';
+  } else {
+    const names = { r: 'ROUGE', g: 'VERT', b: 'BLEU' };
+    const colors = { r: '#ff4444', g: '#44ff66', b: '#4466ff' };
+    label.textContent = '■ FILTRE ' + names[ch];
+    label.style.color = colors[ch];
+    playTone(600, .1);
+  }
+};
+
+window.flipCamera = function() {
+  window._camFacingMode = window._camFacingMode === 'environment' ? 'user' : 'environment';
+  startCamera();
+  playBeep();
+};
+
+// ═══════════════════════ NFC ═══════════════════════
+function renderNFC(container, idx) {
+  const e = ENIGMAS[idx]; // pour accéder à e.nfcTagId
+  const zone = document.createElement('div');
+  zone.className = 'nfc-zone';
+  zone.innerHTML = `<div class="nfc-icon">📡</div><div class="nfc-label">APPUYEZ</div>`;
+
+  // Vérifier si Web NFC est supporté
+  if (!('NDEFReader' in window)) {
+    // Fallback : ancien comportement (appui long)
+    zone.innerHTML += `<div style="font-size:.5rem;color:var(--warn);margin-top:8px;">NFC non supporté — appui long pour simuler</div>`;
+    let timer = null, holding = false;
+    function startScan() {
+      holding = true; zone.classList.add('scanning');
+      timer = setTimeout(() => { if (holding) { playSuccess(); setTimeout(()=>solveEnigma(idx),800); } }, 3000);
+    }
+    function stopScan() { holding = false; if(timer)clearTimeout(timer); zone.classList.remove('scanning'); }
+    zone.addEventListener('touchstart', (ev)=>{ev.preventDefault();startScan();});
+    zone.addEventListener('touchend', stopScan);
+    zone.addEventListener('mousedown', startScan);
+    zone.addEventListener('mouseup', stopScan);
+    container.appendChild(zone);
+    return;
+  }
+
+  // Vrai scan NFC
+  zone.addEventListener('click', async () => {
+    zone.classList.add('scanning');
+    zone.querySelector('.nfc-label').textContent = 'Scannez';
+    playTone(440, .1);
+
+    try {
+      const ndef = new NDEFReader();
+      await ndef.scan();
+
+      ndef.onreading = (event) => {
+        const tagId = event.serialNumber; // ex: "04:a2:3b:..."
+        console.log('Tag détecté:', tagId);
+
+        if (tagId.toLowerCase() === e.nfcTagId.toLowerCase()) {
+          // BON TAG
+          zone.classList.remove('scanning');
+          zone.querySelector('.nfc-icon').textContent = '✅';
+          zone.querySelector('.nfc-label').textContent = 'TAG VÉRIFIÉ ✓ Bravo !';
+          playSuccess();
+          setTimeout(() => solveEnigma(idx), 1000);
+        } else {
+          // MAUVAIS TAG
+          zone.querySelector('.nfc-label').textContent = 'MAUVAIS TAG ✗';
+          playError();
+          setTimeout(() => {
+            zone.querySelector('.nfc-label').textContent = 'RÉESSAYEZ...';
+          }, 2000);
+        }
+      };
+
+      ndef.onreadingerror = () => {
+        zone.querySelector('.nfc-label').textContent = 'ERREUR DE LECTURE';
+        playError();
+      };
+
+    } catch (err) {
+      console.error('NFC error:', err);
+      zone.classList.remove('scanning');
+      zone.querySelector('.nfc-label').textContent = 'NFC REFUSÉ';
+    }
+  });
+
+  container.appendChild(zone);
+}
+
+// ═══════════════════════ KEYPAD ═══════════════════════
+function renderKeypad(container, idx) {
+  const code = ENIGMAS[idx].answer[0]; let entered = '';
+  const wrap = document.createElement('div'); wrap.className = 'keypad';
+  const display = document.createElement('div'); display.className = 'keypad-display'; display.id = 'keypad-display';
+  wrap.appendChild(display);
+  function updateDisplay() {
+    let h = '';
+    for (let i=0;i<4;i++) h += i<entered.length ? `<span class="digit">${entered[i]}</span>` : `<span class="digit empty">&nbsp;</span>`;
+    display.innerHTML = h;
+  }
+  updateDisplay();
+  for (let n=1;n<=9;n++) { const b=document.createElement('button'); b.className='key-btn'; b.textContent=n; b.onclick=()=>pressKey(String(n)); wrap.appendChild(b); }
+  const clr=document.createElement('button'); clr.className='key-btn action'; clr.textContent='CLR'; clr.onclick=()=>{entered='';updateDisplay();playBeep();}; wrap.appendChild(clr);
+  const z=document.createElement('button'); z.className='key-btn'; z.textContent='0'; z.onclick=()=>pressKey('0'); wrap.appendChild(z);
+  const ent=document.createElement('button'); ent.className='key-btn submit-key action'; ent.textContent='ENT'; ent.onclick=()=>submitCode(); wrap.appendChild(ent);
+  container.appendChild(wrap);
+  const fb=document.createElement('div'); fb.className='feedback-msg'; fb.id='feedback'; container.appendChild(fb);
+
+  function pressKey(d) { if(entered.length>=4)return; entered+=d; playKeyBeep(entered[entered.length-1]===code[entered.length-1]); updateDisplay(); }
+  function submitCode() {
+    const feedback=document.getElementById('feedback');
+    if (entered===code) { feedback.className='feedback-msg success'; feedback.textContent='✓ CODE ACCEPTÉ'; playSuccess(); setTimeout(()=>solveEnigma(idx),1000); }
+    else { feedback.className='feedback-msg error'; feedback.textContent='✗ CODE INCORRECT'; playError(); entered=''; updateDisplay(); setTimeout(()=>{feedback.className='feedback-msg';},2000); }
+  }
+}
+
+// ═══════════════════════ PUZZLE ═══════════════════════
+function renderPuzzle(container, idx) {
+  const labels = ['J','O','Y','E','U','X','4','0','A','N','S','!','2','0','2',''];
+  const size = 4; let tiles = [...Array(16).keys()];
+  function shuffle() { for(let i=0;i<200;i++){const e=tiles.indexOf(15);const n=[];if(e%size!==0)n.push(e-1);if(e%size!==size-1)n.push(e+1);if(e>=size)n.push(e-size);if(e<size*(size-1))n.push(e+size);const p=n[Math.floor(Math.random()*n.length)];[tiles[e],tiles[p]]=[tiles[p],tiles[e]];} }
+  shuffle();
+  const grid = document.createElement('div'); grid.className='puzzle-grid'; grid.id='puzzle-grid'; container.appendChild(grid);
+  function renderGrid() {
+    grid.innerHTML='';
+    tiles.forEach((t,i) => {
+      const p = document.createElement('div');
+      p.className = `puzzle-piece ${t===15?'empty':''} ${t===i&&t!==15?'correct':''}`;
+      p.textContent = t===15?'':labels[t];
+      if(t!==15) p.onclick = () => moveTile(i);
+      grid.appendChild(p);
+    });
+  }
+  function moveTile(ci) {
+    const ei=tiles.indexOf(15); const r=Math.floor(ci/size),c=ci%size,er=Math.floor(ei/size),ec=ei%size;
+    if((Math.abs(r-er)===1&&c===ec)||(Math.abs(c-ec)===1&&r===er)) {
+      [tiles[ci],tiles[ei]]=[tiles[ei],tiles[ci]]; playBeep(); renderGrid();
+      if(tiles.every((t,i)=>t===i)){playSuccess();setTimeout(()=>solveEnigma(idx),1200);}
+    }
+  }
+  renderGrid();
+  const info=document.createElement('div'); info.style.cssText='text-align:center;font-family:var(--font-mono);font-size:.65rem;color:var(--text-dim);margin-top:12px;'; info.textContent='Formez : JOYEUX 40 ANS! 202_'; container.appendChild(info);
+}
+
+// ═══════════════════════ FAKE BUG ═══════════════════════
+function triggerFakeBug(idx) {
+  showScreen('bug-screen');
+  document.querySelector('#bug-screen .bug-content').innerHTML = `
+    <div class="bug-icon">⚠️</div>
+    <div class="bug-text">ERREUR SYSTÈME CRITIQUE<br>Module [ENIGMA_CORE] corrompu<br>Tentative de récupération...<br><br><span style="color:#666">Ne fermez pas l'application</span></div>
+    <div class="bug-code">0x1986F: STACK_OVERFLOW<br>at processEnigma() line 1986<br>at validateAgent() line 40<br>MEMORY DUMP: 47 55 41 44<br>45 4C 4F 55 50 45</div>
+  `;
+  playTone(100,1,'sawtooth'); setTimeout(()=>playTone(80,.5,'square'),500);
+  setTimeout(() => {
+    document.querySelector('#bug-screen .bug-content').innerHTML = `
+      <div class="bug-icon" style="animation:none">😏</div>
+      <div class="bug-text" style="color:var(--success)">
+        SYSTÈME RÉTABLI<br><br>Tu y as cru, hein ?<br>Ce n'était qu'un test de<br><strong>résistance au stress</strong>.<br><br>
+        <span style="color:var(--accent)">Bien joué, Agent.</span>
+      </div>
+    `;
+    playSuccess();
+    setTimeout(() => solveEnigma(idx), 3000);
+  }, 6000);
+}
+
+// ═══════════════════════ SOLVE ═══════════════════════
+function solveEnigma(idx) {
+  if (!STATE.solved.includes(idx)) {
+    STATE.solved.push(idx);
+    STATE.currentEnigma = Math.max(STATE.currentEnigma, idx + 1);
+    saveState();
+  }
+  stopCurrentAudio();
+  stopTorch();
+  if (gpsWatchId !== null) { navigator.geolocation.clearWatch(gpsWatchId); gpsWatchId = null; }
+  stopCamera();
+
+  if (STATE.solved.length >= TOTAL) {
+    setTimeout(() => showScreen('victory-screen'), 500);
+    return;
+  }
+  const nextIdx = STATE.currentEnigma;
+  const nextAct = getActForIndex(nextIdx);
+  const prevAct = getActForIndex(nextIdx - 1);
+  if (nextIdx < TOTAL && nextAct !== prevAct) {
+    showActTransition(nextAct, () => showHub());
+  } else {
+    showHub();
+  }
+}
+
+// ═══════════════════════ HINT ═══════════════════════
+function showHint() {
+  const idx = window._currentIdx;
+  if (!STATE.hintUsed.includes(idx)) { STATE.hintUsed.push(idx); saveState(); }
+  document.getElementById('hint-btn').style.display = 'none';
+  const body = document.getElementById('enigma-body');
+  const hint = document.createElement('div');
+  hint.className = 'enigma-narrative';
+  hint.style.borderLeftColor = 'var(--warn)';
+  hint.style.background = 'var(--warn-dim)';
+  hint.style.color = 'var(--warn)';
+  hint.textContent = '💡 INDICE : ' + window._currentHint;
+  body.insertBefore(hint, body.children[1] || null);
+}
+
+// ═══════════════════════ DEV TOOLS ═══════════════════════
+function devSkip() {
+  const idx = STATE.currentEnigma;
+  if (idx < TOTAL) solveEnigma(idx);
+}
+function devSolveAll() {
+  for (let i = 0; i < TOTAL; i++) { if (!STATE.solved.includes(i)) STATE.solved.push(i); }
+  STATE.currentEnigma = TOTAL;
+  saveState();
+  showScreen('victory-screen');
+}
+function resetGame() {
+  STATE = { currentEnigma: 0, solved: [], hintUsed: [], started: false };
+  saveState();
+  location.reload();
+}
+
+// ═══════════════════════ PWA INSTALL ═══════════════════════
+let deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  console.log('Install prompt captured');
+  showInstallButton();
+});
+
+window.addEventListener('appinstalled', () => {
+  console.log('PWA installed');
+  deferredPrompt = null;
+  setTimeout(() => showScreen('intro-screen'), 500);
+});
+
+function isStandalone() {
+  return window.matchMedia('(display-mode: standalone)').matches
+    || window.navigator.standalone === true;
+}
+
+function isIOS() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+}
+
+function showInstallButton() {
+  const btnInstall = document.getElementById('btn-install');
+  const btnSkip = document.getElementById('btn-skip');
+  const btnEnter = document.getElementById('btn-enter-direct');
+  const hint = document.getElementById('install-hint');
+
+  if (isStandalone()) {
+    btnEnter.style.display = 'inline-block';
+  } else if (deferredPrompt) {
+    btnInstall.style.display = 'inline-block';
+    btnSkip.style.display = 'inline-block';
+  } else if (isIOS()) {
+    btnInstall.style.display = 'none';
+    hint.style.display = 'block';
+    hint.innerHTML = '📱 Pour installer sur iPhone :<br>Appuyez sur <strong style="color:var(--accent)">Partager ⬆</strong> puis<br><strong style="color:var(--accent)">Sur l\'écran d\'accueil</strong>';
+    btnSkip.style.display = 'inline-block';
+    btnSkip.textContent = 'CONTINUER ›';
+  } else {
+    btnEnter.style.display = 'inline-block';
+  }
+}
+
+function installPWA() {
+  if (!deferredPrompt) {
+    showScreen('intro-screen');
+    return;
+  }
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then((result) => {
+    console.log('Install choice:', result.outcome);
+    deferredPrompt = null;
+    if (result.outcome === 'accepted') {
+      // Will trigger appinstalled event
+    } else {
+      showScreen('intro-screen');
+    }
+  });
+}
+
+function skipInstall() {
+  showScreen('intro-screen');
+}
+
+// ═══════════════════════ INIT ═══════════════════════
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadConfig();
+  document.getElementById('total-display').textContent = TOTAL + ' épreuves';
+  // Le boot sera lancé par launchBoot() au clic
+  if (STATE.started && STATE.solved.length > 0) {
+    showHub();
+  }
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js', { scope: './' })
+      .then(reg => {
+        console.log('SW registered, scope:', reg.scope);
+        reg.update();
+      })
+      .catch(e => console.log('SW error', e));
+  }
+});
+</script>
+</body>
+</html>
