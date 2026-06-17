@@ -1,0 +1,254 @@
+{
+  "schemaVersion": 1,
+  "meta": {
+    "id": "mariage-demo",
+    "name": "Quête des Mariés",
+    "client": "Léa & Tom",
+    "note": "Version mariage — 16 énigmes",
+    "version": 1,
+    "createdAt": "2026-06-17T09:50:30.589Z",
+    "updatedAt": "2026-06-17T09:50:30.589Z"
+  },
+  "branding": {
+    "docTitle": "QUÊTE DES MARIÉS",
+    "logo": "LES MARIÉS",
+    "subtitle": "Avant le grand jour",
+    "codename": "/// QUÊTE DES MARIÉS ///",
+    "classified": "/// CONFIDENTIEL ///",
+    "avatar": "icons/avatar.png"
+  },
+  "actBoundaries": [
+    0,
+    8,
+    16
+  ],
+  "acts": [
+    {
+      "name": "INITIALISATION",
+      "subtitle": "Vérification d'identité"
+    },
+    {
+      "name": "CALIBRATION",
+      "subtitle": "Ajustement cognitifs"
+    }
+  ],
+  "enigmas": [
+    {
+      "id": 1,
+      "type": "Culture",
+      "format": "text",
+      "narrative": "SCAN BIOMÉTRIQUE > Vérification des centres d'intérêt >",
+      "question": "Même s'il n'est pas menuisier,\n il a quand même ciré beaucoup de parquets.\n\nMalgré ses nombreux talents,\n les briques n'ont jamais fait partie de ses habitudes.\n\nIl a été au sommet,\n mais tout le monde le souhaite à ses pieds.\n\nQui est-ce ?",
+      "answer": [
+        "jordan",
+        "michael jordan"
+      ],
+      "hint": "Sa Majesté de l'Air...",
+      "title": "Bricolage"
+    },
+    {
+      "id": 2,
+      "type": "Suite Logique",
+      "format": "text",
+      "narrative": "MODULE LOGIQUE > Séquence numérique incomplète détectée. Analyse requise.",
+      "question": "21  —  22  —  26  —  ?\n\nComplétez la suite.",
+      "answer": [
+        "5",
+        "05"
+      ],
+      "hint": "??/??/????",
+      "title": "La Suite Mystère"
+    },
+    {
+      "id": 3,
+      "type": "Culture",
+      "format": "text",
+      "narrative": "MODULE CULTUREL > Scan des références générationnelles > Décennie 1986.",
+      "question": "1986, tu pointais le bout de ton nez.\n\nLa même année il décide de prendre un peu de congés.\n\nVoiture de sport, casquette.\n\nEn une seule journée il vous a marqué pendant des années.\n\nQui est-ce ?",
+      "answer": [
+        "ferris bueller",
+        "ferris",
+        "bueller"
+      ],
+      "hint": "\"Life moves pretty fast...\" 🎬",
+      "title": "La légende"
+    },
+    {
+      "id": 4,
+      "type": "Culture",
+      "format": "text",
+      "narrative": "SCAN BIOMÉTRIQUE > Vérification des capacités élémentaires",
+      "question": "Grâce à moi, elle est belle !\n\nQui suis-je ?",
+      "answer": [
+        "b"
+      ],
+      "hint": "Grâce à moi, on est bon",
+      "title": "Belle"
+    },
+    {
+      "id": 5,
+      "type": "Interaction",
+      "format": "lightdetect",
+      "narrative": "ALERTE > Module optique compromis.",
+      "question": "Et la lumière fût...",
+      "answer": [
+        "ok"
+      ],
+      "hint": "Passez de l'obsurité à la lumière",
+      "title": "Et la lumière fut"
+    },
+    {
+      "id": 6,
+      "type": "Nombre",
+      "format": "text",
+      "narrative": "MODULE logique > Sauras-tu révéler les bons nombres.",
+      "question": "Quels sont les trois nombres positifs qui donnent le même résultat quand on les multiplie et quand on les additionne ensemble ?",
+      "answer": [
+        "1,2,3"
+      ],
+      "hint": "C'est mort... à toi de trouver !",
+      "title": "+ & x"
+    },
+    {
+      "id": 7,
+      "type": "Histoire",
+      "format": "text",
+      "narrative": "SCAN BIOMÉTRIQUE > Vérification des centres d'intérêt.",
+      "question": "Je peux me faire attendre.\n\nMais en général je finis par pousser.\n\nJe suis moins fournie que ton espoir de m'avoir.\n\nQui suis-je ?",
+      "answer": [
+        "barbe"
+      ],
+      "hint": "C'est mort ! A toi de trouver !",
+      "title": "Hope"
+    },
+    {
+      "id": 8,
+      "type": "Audio Père Fouras",
+      "format": "audio",
+      "audioId": "fouras-audio",
+      "hasWave": true,
+      "hasSpeedControl": true,
+      "hasDownload": true,
+      "narrative": "INTERCEPTION > Message audio capté. Le Père Fouras a parlé. Décodage nécessaire.",
+      "question": "Trouvez la réponse à l'énigme.",
+      "answer": [
+        "pas",
+        "un pas"
+      ],
+      "hint": "... de géant",
+      "title": "Transmission Brouillée"
+    },
+    {
+      "id": 9,
+      "type": "Ieps",
+      "format": "text",
+      "narrative": "MODULE logique > Vérification des capacités d'analyse.",
+      "image": "icons/pieds.png",
+      "question": "Combien de pieds voyez-vous ?",
+      "answer": [
+        "12"
+      ],
+      "hint": "La tête en bas",
+      "title": "Ieps"
+    },
+    {
+      "id": 10,
+      "type": "Suite gourmande",
+      "format": "text",
+      "narrative": "MODULE LOGIQUE > Séquence numérique incomplète détectée. Analyse requise.",
+      "question": "Trouvez le résultat :\n\n🍟  -  8  -  9  -  1\n1  -  9  -🍔-  1\n0  -  2  -  0  -  2\n2  -  0  -  1  -  🍪\n🍕-  2  -  0  -  2\n\n🍔  x  🍕  +  🍪 - 2 x 🍟 = ?",
+      "answer": [
+        "40"
+      ],
+      "hint": "Vois-tu les années ?",
+      "title": "La Faim"
+    },
+    {
+      "id": 11,
+      "type": "Devinette",
+      "format": "text",
+      "narrative": "MODULE LOGIQUE > Niveau 2 > Capacité de déduction sous pression.",
+      "question": "Je suis plus puissant que Dieu.\n\nJe suis plus méchant que le diable.\n\nLe pauvre en possède.\n\nLe riche en manque.\n\nEt si vous me mangez, vous mourrez.",
+      "answer": [
+        "rien"
+      ],
+      "hint": "Tout",
+      "title": "L'essentiel"
+    },
+    {
+      "id": 12,
+      "type": "Devinette",
+      "format": "text",
+      "narrative": "MODULE ANALYTIQUE > Épreuve de raisonnement. Concentration maximale requise.",
+      "question": "Tu es dans un bus qui part avec 6 passagers dont 4 ont les yeux bleus et 2 ont les yeux verts\n\nÀ l'arrêt suivant, 2 montent et 3 descendent.\nAu suivant, 5 descendent et 4 montent.\n\nDe quelle couleur sont les yeux du chauffeur ?",
+      "answer": [
+        "noir",
+        "marron",
+        "noirs",
+        "marrons",
+        "brun",
+        "bruns"
+      ],
+      "hint": "QUI conduit le bus ? 👀",
+      "title": "Le Piège du Bus"
+    },
+    {
+      "id": 13,
+      "type": "Culture",
+      "format": "text",
+      "narrative": "MODULE CULTUREL > Scan local > Identité.",
+      "question": "L'amiral mort flotta dans ma chair pour rentrer au port, depuis, mon surnom a le goût du sang.\n\n Colomb baptisa une de mes mères du nom d'une vierge espagnole\n\nJe naît du berceau de la terre, et meurs en gorge d'homme.\n\nQui suis-je ?",
+      "answer": [
+        "rhum",
+        "le rhum",
+        "rum"
+      ],
+      "hint": "Tchin tchin",
+      "title": "L'Or"
+    },
+    {
+      "id": 14,
+      "type": "0101",
+      "format": "text",
+      "narrative": "MODULE PROGRAMMATION > Un code a été dissimulé sauras-tu le révéler.",
+      "question": "01010100 01110010 01101001 01110000 01101100 01100101 00100000 01110011 01100001 01110101 01110100",
+      "answer": [
+        "triple saut"
+      ],
+      "hint": "3 fois tu voleras",
+      "title": "La machine"
+    },
+    {
+      "id": 15,
+      "type": "Devinette",
+      "format": "text",
+      "narrative": "MODULE LOGIQUE > Niveau 2 > Capacité de déduction sous pression.",
+      "iframe": "https://scape.enepe.fr/ressources/cesar/index2.html",
+      "question": "🥑 - AVOCAT - 🥑\n\nV'SWZYBDKXD M'OCD ZKC VK MREDO M'OCD V'KDDBBSCCKQO",
+      "answer": [
+        "L'IMPORTANT C'EST PAS LA CHUTE, C'EST L'ATTERRISSAGE"
+      ],
+      "hint": "A vo cat",
+      "title": "Avocat"
+    },
+    {
+      "id": 16,
+      "type": "Position GPS",
+      "format": "gps",
+      "narrative": "MODULE GPS > Signal crypté détecté. Déplacement physique requis pour décoder.",
+      "question": "Un signal a été localisé. Déplacez-vous jusqu'à la zone cible pour décrypter le message secret.",
+      "gpsTarget": {
+        "lat": 16.199749,
+        "lng": -61.467685
+      },
+      "gpsRadius": 35,
+      "gpsSecret": "OMBRE",
+      "answer": [
+        "ombre",
+        "l'ombre"
+      ],
+      "hint": "Approchez-vous du point cible... le radar vous guide !",
+      "title": "Signal Localisé"
+    }
+  ]
+}
