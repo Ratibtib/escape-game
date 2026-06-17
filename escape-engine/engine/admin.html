@@ -139,6 +139,20 @@
   .reorder{display:flex;flex-direction:column;gap:1px}
   .reorder button{font-size:.6rem;color:var(--faint);padding:0 4px;line-height:1.1}
   .reorder button:hover{color:var(--accent)}
+  /* repo settings modal */
+  .scrim{position:fixed;inset:0;background:rgba(5,5,9,.7);backdrop-filter:blur(3px);z-index:80;display:none;align-items:center;justify-content:center;padding:20px}
+  .scrim.show{display:flex}
+  .repo-modal{background:var(--card);border:1px solid var(--border-bright);border-radius:16px;padding:24px;max-width:480px;width:100%;box-shadow:0 24px 70px rgba(0,0,0,.6)}
+  .repo-modal h3{font-size:1.05rem;margin-bottom:5px}
+  .repo-modal p{color:var(--dim);font-size:.76rem;line-height:1.5;margin-bottom:18px}
+  .repo-modal label{display:block;font-family:var(--mono);font-size:.58rem;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin:0 0 6px}
+  .repo-modal input{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:9px;color:var(--text);padding:9px 12px;font-size:.82rem;margin-bottom:14px}
+  .repo-modal input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+  .repo-modal .rs-row{display:flex;gap:12px}.repo-modal .rs-row>div{flex:1}
+  .rs-preview{font-family:var(--mono);font-size:.62rem;color:var(--faint);word-break:break-all;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:9px 11px;margin-bottom:16px;min-height:18px}
+  .rs-acts{display:flex;gap:9px;justify-content:flex-end}
+  .reorder button{font-size:.6rem;color:var(--faint);padding:0 4px;line-height:1.1}
+  .reorder button:hover{color:var(--accent)}
 </style>
 </head>
 <body>
@@ -156,8 +170,29 @@
   <span class="savestate" id="savestate">brouillon non sauvegardé</span>
   <button class="btn ghost sm" onclick="document.getElementById('importer').click()">⇪ Importer</button>
   <button class="btn primary sm" onclick="exportConfig()">⇩ Exporter config.json</button>
+  <button class="btn ghost sm" id="repo-btn" onclick="goToRepo()" title="Ouvrir le dossier du jeu sur GitHub">↗ Repo cible</button>
+  <button class="btn ghost sm" onclick="openRepoSettings()" title="Régler le dépôt">⚙</button>
   <input type="file" id="importer" accept="application/json,.json" onchange="importConfig(event)">
 </header>
+
+<!-- Réglage dépôt (stocké en localStorage, jamais dans les fichiers) -->
+<div class="scrim" id="repo-scrim">
+  <div class="repo-modal">
+    <h3>Dépôt cible</h3>
+    <p>Indiqué une seule fois, gardé dans ton navigateur. Sert juste à ouvrir la bonne page d'upload GitHub — aucun mot de passe ni jeton n'est stocké.</p>
+    <label>URL du dépôt GitHub</label>
+    <input id="rs-url" placeholder="https://github.com/ratibtib/mon-repo">
+    <div class="rs-row">
+      <div><label>Branche</label><input id="rs-branch" placeholder="main"></div>
+      <div><label>Chemin des jeux</label><input id="rs-path" placeholder="escape-engine/games"></div>
+    </div>
+    <div class="rs-preview" id="rs-preview"></div>
+    <div class="rs-acts">
+      <button class="btn ghost sm" onclick="closeRepoSettings()">Annuler</button>
+      <button class="btn primary sm" onclick="saveRepoSettings()">Enregistrer</button>
+    </div>
+  </div>
+</div>
 
 <div id="restore-banner"></div>
 
@@ -801,8 +836,9 @@ let configFileName = "config.json";   // nom du fichier à (ré)exporter
 
 // ════════════ CHARGEMENT ════════════
 function configFileFromURL(){
+  // Permet ?config=projet-1986/config.json — sous-dossier autorisé, pas de remontée (..).
   const p = new URLSearchParams(location.search).get('config');
-  if(p && /^[\w.-]+\.json$/.test(p)){ configFileName = p; return './'+p; }
+  if(p && /^[\w./-]+\.json$/.test(p) && !p.includes('..')){ return './'+p; }
   return './config.json';
 }
 async function boot(){
@@ -1210,7 +1246,74 @@ function importConfig(ev){
   ev.target.value='';
 }
 
+// ════════════ DÉPÔT CIBLE (ouvrir l'upload GitHub du jeu courant) ════════════
+const REPO_KEY = "escape_admin_repo";
+function currentSlug(){
+  // déduit du paramètre ?config=<slug>/config.json
+  const p = new URLSearchParams(location.search).get('config') || '';
+  const m = p.match(/^([\w.-]+)\/config\.json$/);
+  return m ? m[1] : '';
+}
+function getRepoSettings(){
+  try{ return JSON.parse(localStorage.getItem(REPO_KEY)) || {}; }catch(e){ return {}; }
+}
+function buildUploadUrl(){
+  const s = getRepoSettings();
+  if(!s.url) return null;
+  const base = s.url.replace(/\/+$/,'').replace(/\.git$/,'');
+  const branch = (s.branch||'main').trim();
+  const path = (s.path||'escape-engine/games').replace(/^\/+|\/+$/g,'');
+  const slug = currentSlug();
+  // si pas de slug (nouveau jeu), on ouvre le dossier des jeux pour créer le sien
+  return `${base}/upload/${branch}/${path}${slug?('/'+slug):''}`;
+}
+function goToRepo(){
+  const url = buildUploadUrl();
+  if(!url){ openRepoSettings(); toast("Renseigne d'abord ton dépôt"); return; }
+  window.open(url, '_blank', 'noopener');
+}
+function openRepoSettings(){
+  const s = getRepoSettings();
+  document.getElementById('rs-url').value = s.url||'';
+  document.getElementById('rs-branch').value = s.branch||'main';
+  document.getElementById('rs-path').value = s.path||'escape-engine/games';
+  updateRepoPreview();
+  document.getElementById('repo-scrim').classList.add('show');
+}
+function closeRepoSettings(){ document.getElementById('repo-scrim').classList.remove('show'); }
+function updateRepoPreview(){
+  const url=document.getElementById('rs-url').value.trim();
+  const branch=document.getElementById('rs-branch').value.trim()||'main';
+  const path=(document.getElementById('rs-path').value.trim()||'escape-engine/games').replace(/^\/+|\/+$/g,'');
+  const slug=currentSlug();
+  const prev=document.getElementById('rs-preview');
+  if(!url){ prev.textContent='Le bouton ouvrira : (renseigne l\'URL du dépôt)'; return; }
+  const base=url.replace(/\/+$/,'').replace(/\.git$/,'');
+  prev.textContent='→ '+`${base}/upload/${branch}/${path}${slug?('/'+slug):''}`;
+}
+['rs-url','rs-branch','rs-path'].forEach(id=>{
+  const el=document.getElementById(id); if(el) el.addEventListener('input', updateRepoPreview);
+});
+function saveRepoSettings(){
+  const s={
+    url:document.getElementById('rs-url').value.trim(),
+    branch:document.getElementById('rs-branch').value.trim()||'main',
+    path:document.getElementById('rs-path').value.trim()||'escape-engine/games',
+  };
+  try{ localStorage.setItem(REPO_KEY, JSON.stringify(s)); }catch(e){}
+  closeRepoSettings();
+  refreshRepoBtn();
+  toast("Dépôt enregistré");
+}
+function refreshRepoBtn(){
+  const btn=document.getElementById('repo-btn'); if(!btn) return;
+  const slug=currentSlug();
+  btn.textContent = slug ? ('↗ Déposer dans /'+slug) : '↗ Repo cible';
+  btn.style.opacity = getRepoSettings().url ? '1' : '.6';
+}
+
 boot();
+refreshRepoBtn();
 </script>
 </body>
 </html>
