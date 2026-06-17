@@ -178,12 +178,12 @@
 <!-- Réglage dépôt (stocké en localStorage, jamais dans les fichiers) -->
 <div class="scrim" id="repo-scrim">
   <div class="repo-modal">
-    <h3>Dépôt cible</h3>
-    <p>Indiqué une seule fois, gardé dans ton navigateur. Sert juste à ouvrir la bonne page d'upload GitHub — aucun mot de passe ni jeton n'est stocké.</p>
-    <label>URL du dépôt GitHub</label>
-    <input id="rs-url" placeholder="https://github.com/ratibtib/mon-repo">
+    <h3>Dépôt cible (auto)</h3>
+    <p>Détecté automatiquement depuis l'adresse de ton site — normalement tu n'as rien à remplir. Ne complète ces champs que pour forcer un autre dépôt, une branche <code>master</code> ou un domaine personnalisé. Gardé dans ton navigateur, aucun mot de passe ni jeton.</p>
+    <label>URL du dépôt GitHub (laisse vide = auto)</label>
+    <input id="rs-url" placeholder="https://github.com/ton-pseudo/ton-repo">
     <div class="rs-row">
-      <div><label>Branche</label><input id="rs-branch" placeholder="main"></div>
+      <div><label>Branche (déf. main)</label><input id="rs-branch" placeholder="main"></div>
       <div><label>Chemin des jeux</label><input id="rs-path" placeholder="escape-engine/games"></div>
     </div>
     <div class="rs-preview" id="rs-preview"></div>
@@ -1248,46 +1248,66 @@ function importConfig(ev){
 
 // ════════════ DÉPÔT CIBLE (ouvrir l'upload GitHub du jeu courant) ════════════
 const REPO_KEY = "escape_admin_repo";
+const DEFAULT_GAMES_PATH = "escape-engine/games";   // chemin des configs dans le repo
 function currentSlug(){
   // déduit du paramètre ?config=<slug>/config.json
   const p = new URLSearchParams(location.search).get('config') || '';
   const m = p.match(/^([\w.-]+)\/config\.json$/);
   return m ? m[1] : '';
 }
+function autoRepoFromLocation(){
+  // L'admin est servi depuis GitHub Pages → on déduit user/repo de l'URL même.
+  const m = location.hostname.match(/^([\w-]+)\.github\.io$/i);
+  if(!m) return null;                       // domaine personnalisé → non déductible
+  const user = m[1];
+  const segs = location.pathname.split('/').filter(Boolean);
+  // page projet : 1er segment = repo (sauf si c'est directement le fichier .html)
+  const repo = (segs.length && !/\.html?$/i.test(segs[0])) ? segs[0] : (user + '.github.io');
+  return `https://github.com/${user}/${repo}`;
+}
 function getRepoSettings(){
   try{ return JSON.parse(localStorage.getItem(REPO_KEY)) || {}; }catch(e){ return {}; }
 }
-function buildUploadUrl(){
+function effectiveRepo(){
+  // priorité : override manuel > détection auto > rien
   const s = getRepoSettings();
-  if(!s.url) return null;
-  const base = s.url.replace(/\/+$/,'').replace(/\.git$/,'');
-  const branch = (s.branch||'main').trim();
-  const path = (s.path||'escape-engine/games').replace(/^\/+|\/+$/g,'');
+  return {
+    url:    s.url    || autoRepoFromLocation() || '',
+    branch: s.branch || 'main',
+    path:   s.path   || DEFAULT_GAMES_PATH,
+    auto:   !s.url,                          // true si on s'appuie sur l'auto-détection
+  };
+}
+function buildUploadUrl(){
+  const e = effectiveRepo();
+  if(!e.url) return null;
+  const base = e.url.replace(/\/+$/,'').replace(/\.git$/,'');
+  const path = e.path.replace(/^\/+|\/+$/g,'');
   const slug = currentSlug();
-  // si pas de slug (nouveau jeu), on ouvre le dossier des jeux pour créer le sien
-  return `${base}/upload/${branch}/${path}${slug?('/'+slug):''}`;
+  return `${base}/upload/${e.branch}/${path}${slug?('/'+slug):''}`;
 }
 function goToRepo(){
   const url = buildUploadUrl();
-  if(!url){ openRepoSettings(); toast("Renseigne d'abord ton dépôt"); return; }
+  if(!url){ openRepoSettings(); toast("Indique l'URL de ton dépôt"); return; }
   window.open(url, '_blank', 'noopener');
 }
 function openRepoSettings(){
-  const s = getRepoSettings();
-  document.getElementById('rs-url').value = s.url||'';
-  document.getElementById('rs-branch').value = s.branch||'main';
-  document.getElementById('rs-path').value = s.path||'escape-engine/games';
+  const s = getRepoSettings(), auto = autoRepoFromLocation();
+  document.getElementById('rs-url').value = s.url || '';
+  document.getElementById('rs-url').placeholder = auto || 'https://github.com/ton-pseudo/ton-repo';
+  document.getElementById('rs-branch').value = s.branch || '';
+  document.getElementById('rs-path').value = s.path || '';
   updateRepoPreview();
   document.getElementById('repo-scrim').classList.add('show');
 }
 function closeRepoSettings(){ document.getElementById('repo-scrim').classList.remove('show'); }
 function updateRepoPreview(){
-  const url=document.getElementById('rs-url').value.trim();
+  const url=document.getElementById('rs-url').value.trim() || autoRepoFromLocation() || '';
   const branch=document.getElementById('rs-branch').value.trim()||'main';
-  const path=(document.getElementById('rs-path').value.trim()||'escape-engine/games').replace(/^\/+|\/+$/g,'');
+  const path=(document.getElementById('rs-path').value.trim()||DEFAULT_GAMES_PATH).replace(/^\/+|\/+$/g,'');
   const slug=currentSlug();
   const prev=document.getElementById('rs-preview');
-  if(!url){ prev.textContent='Le bouton ouvrira : (renseigne l\'URL du dépôt)'; return; }
+  if(!url){ prev.textContent='Ouvrira : (URL du dépôt non détectée — renseigne-la)'; return; }
   const base=url.replace(/\/+$/,'').replace(/\.git$/,'');
   prev.textContent='→ '+`${base}/upload/${branch}/${path}${slug?('/'+slug):''}`;
 }
@@ -1295,21 +1315,22 @@ function updateRepoPreview(){
   const el=document.getElementById(id); if(el) el.addEventListener('input', updateRepoPreview);
 });
 function saveRepoSettings(){
-  const s={
-    url:document.getElementById('rs-url').value.trim(),
-    branch:document.getElementById('rs-branch').value.trim()||'main',
-    path:document.getElementById('rs-path').value.trim()||'escape-engine/games',
-  };
+  // on ne stocke que ce qui diffère de l'auto (champ vide = on laisse l'auto faire)
+  const s={};
+  const url=document.getElementById('rs-url').value.trim();
+  const branch=document.getElementById('rs-branch').value.trim();
+  const path=document.getElementById('rs-path').value.trim();
+  if(url) s.url=url; if(branch) s.branch=branch; if(path) s.path=path;
   try{ localStorage.setItem(REPO_KEY, JSON.stringify(s)); }catch(e){}
   closeRepoSettings();
   refreshRepoBtn();
-  toast("Dépôt enregistré");
+  toast("Réglages enregistrés");
 }
 function refreshRepoBtn(){
   const btn=document.getElementById('repo-btn'); if(!btn) return;
   const slug=currentSlug();
   btn.textContent = slug ? ('↗ Déposer dans /'+slug) : '↗ Repo cible';
-  btn.style.opacity = getRepoSettings().url ? '1' : '.6';
+  btn.style.opacity = buildUploadUrl() ? '1' : '.6';
 }
 
 boot();
