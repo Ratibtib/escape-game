@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Console d'édition — Projet 1986</title>
+<style>
+  :root{
+    --bg:#0a0a0f; --bg2:#101019; --card:#15151f; --card2:#1b1b27;
+    --border:#262635; --border-bright:#33334a;
+    --text:#e9e9f2; --dim:#8a8aa0; --faint:#5a5a70;
+    --accent:#00e0d0; --accent-dim:rgba(0,224,208,.14); --accent-glow:rgba(0,224,208,.35);
+    --danger:#ff4d6d; --danger-dim:rgba(255,77,109,.14);
+    --warn:#ffb020; --ok:#39d98a; --ok-dim:rgba(57,217,138,.14);
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--bg); color:var(--text); font-family:var(--sans);
+    font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:radial-gradient(900px 500px at 80% -10%, rgba(0,224,208,.07), transparent 60%);
+  }
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  input,textarea,select{font-family:inherit;font-size:13px}
+  .mono{font-family:var(--mono)}
+
+  /* ── Top bar ── */
+  header.topbar{
+    position:sticky; top:0; z-index:20; display:flex; align-items:center; gap:14px;
+    padding:11px 18px; background:rgba(10,10,15,.82); backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--border);
+  }
+  .brand{display:flex; align-items:center; gap:10px; min-width:0}
+  .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent-glow);animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .brand .name{font-family:var(--mono);font-size:.72rem;letter-spacing:2px;color:var(--accent);text-transform:uppercase;white-space:nowrap}
+  .brand .sub{font-family:var(--mono);font-size:.62rem;color:var(--faint);letter-spacing:1px}
+  .topbar .spacer{flex:1}
+  .proj-pill{display:flex;align-items:center;gap:8px;padding:5px 11px;background:var(--card);border:1px solid var(--border);border-radius:7px;font-size:.72rem;color:var(--dim);max-width:38vw;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .proj-pill b{color:var(--text);font-weight:600}
+  .proj-pill .v{font-family:var(--mono);color:var(--accent);font-size:.65rem}
+  .savestate{font-family:var(--mono);font-size:.6rem;color:var(--faint);letter-spacing:.5px;white-space:nowrap}
+  .savestate.on{color:var(--ok)}
+
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:7px;font-size:.74rem;font-weight:600;letter-spacing:.3px;border:1px solid var(--border-bright);background:var(--card);color:var(--text);transition:.15s}
+  .btn:hover{border-color:var(--accent);color:var(--accent)}
+  .btn.primary{background:var(--accent);color:#04140f;border-color:var(--accent)}
+  .btn.primary:hover{filter:brightness(1.1);color:#04140f}
+  .btn.ghost{background:transparent}
+  .btn.danger:hover{border-color:var(--danger);color:var(--danger)}
+  .btn.sm{padding:5px 9px;font-size:.68rem}
+
+  /* ── Layout ── */
+  .shell{display:grid;grid-template-columns:300px 1fr;min-height:calc(100vh - 49px);position:relative;z-index:1}
+  @media(max-width:860px){.shell{grid-template-columns:1fr}}
+
+  /* ── Sidebar ── */
+  aside{border-right:1px solid var(--border);background:var(--bg2);display:flex;flex-direction:column;min-height:0}
+  @media(max-width:860px){aside{border-right:none;border-bottom:1px solid var(--border)}}
+  .nav{display:flex;padding:10px 12px 0;gap:4px;flex-wrap:wrap}
+  .nav button{padding:7px 11px;font-family:var(--mono);font-size:.64rem;letter-spacing:1px;text-transform:uppercase;color:var(--dim);border-radius:6px 6px 0 0;border-bottom:2px solid transparent}
+  .nav button.active{color:var(--accent);border-bottom-color:var(--accent);background:var(--card)}
+  .nav button:hover:not(.active){color:var(--text)}
+
+  .list-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 8px}
+  .list-head .lbl{font-family:var(--mono);font-size:.62rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--faint)}
+  .enig-list{overflow-y:auto;padding:0 8px 16px;flex:1}
+  .act-group{margin-top:10px}
+  .act-group .act-bar{display:flex;align-items:center;gap:8px;padding:6px 8px;margin-bottom:4px}
+  .act-bar .num{font-family:var(--mono);font-size:.6rem;color:var(--accent);border:1px solid var(--accent-dim);padding:1px 5px;border-radius:4px}
+  .act-bar .nm{font-family:var(--mono);font-size:.62rem;letter-spacing:1px;text-transform:uppercase;color:var(--dim)}
+  .act-bar .line{flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent)}
+
+  .erow{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:8px;border:1px solid transparent;cursor:pointer;transition:.12s}
+  .erow:hover{background:var(--card)}
+  .erow.active{background:var(--card2);border-color:var(--border-bright)}
+  .erow .idx{font-family:var(--mono);font-size:.66rem;color:var(--faint);width:24px;flex-shrink:0;text-align:right}
+  .erow.active .idx{color:var(--accent)}
+  .erow .meta{min-width:0;flex:1}
+  .erow .t{font-size:.8rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .erow .fmt{font-family:var(--mono);font-size:.56rem;letter-spacing:.5px;text-transform:uppercase;color:var(--faint)}
+  .fmt-chip{display:inline-block;padding:0 5px;border-radius:3px;background:var(--accent-dim);color:var(--accent)}
+
+  /* ── Editor ── */
+  main{overflow-y:auto;min-height:0}
+  .panel{max-width:760px;margin:0 auto;padding:26px 26px 80px}
+  .panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:20px;flex-wrap:wrap}
+  .panel-head h2{font-size:1.05rem;font-weight:600;letter-spacing:.2px}
+  .panel-head .eyebrow{font-family:var(--mono);font-size:.6rem;letter-spacing:2px;text-transform:uppercase;color:var(--faint);margin-bottom:5px}
+  .rowbtns{display:flex;gap:7px;flex-wrap:wrap}
+
+  .field{margin-bottom:16px}
+  .field > label{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:6px}
+  .field .help{font-size:.68rem;color:var(--faint);margin-top:5px;line-height:1.45}
+  .inp,.ta,.sel{width:100%;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px 12px;transition:.15s;resize:vertical}
+  .inp:focus,.ta:focus,.sel:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+  .ta{min-height:84px;line-height:1.5;font-family:var(--mono);font-size:12.5px}
+  .ta.short{min-height:60px}
+  .sel{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238a8aa0'><path d='M2 4l4 4 4-4'/></svg>");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:560px){.grid2{grid-template-columns:1fr}}
+
+  .check{display:flex;align-items:center;gap:9px;padding:9px 11px;background:var(--card);border:1px solid var(--border);border-radius:8px;cursor:pointer}
+  .check input{width:16px;height:16px;accent-color:var(--accent)}
+  .check span{font-size:.78rem}
+
+  fieldset.box{border:1px solid var(--border);border-radius:10px;padding:15px 15px 4px;margin-bottom:16px;background:rgba(255,255,255,.012)}
+  fieldset.box>legend{font-family:var(--mono);font-size:.6rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);padding:0 8px}
+
+  /* live preview */
+  .preview{border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-top:8px;background:linear-gradient(180deg,#0c0c14,#0a0a10)}
+  .preview .pv-narr{font-family:var(--mono);font-size:.64rem;letter-spacing:.5px;color:var(--accent);padding:12px 14px;border-bottom:1px solid var(--border);white-space:pre-wrap;line-height:1.5;opacity:.9}
+  .preview .pv-q{padding:16px 14px;white-space:pre-wrap;font-size:.86rem;line-height:1.55}
+  .preview .pv-hint{padding:9px 14px;border-top:1px dashed var(--border);font-size:.72rem;color:var(--warn)}
+  .preview .pv-img{display:block;max-width:100%;border-top:1px solid var(--border)}
+
+  /* json view */
+  pre.json{background:#0c0c12;border:1px solid var(--border);border-radius:10px;padding:16px;overflow:auto;font-family:var(--mono);font-size:11.5px;line-height:1.55;color:#b8c4d0;max-height:62vh}
+
+  /* acts */
+  .act-edit{border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px;background:var(--card)}
+  .act-edit .ahd{display:flex;align-items:center;gap:9px;margin-bottom:12px}
+  .act-edit .ahd .n{font-family:var(--mono);font-size:.62rem;color:var(--accent);border:1px solid var(--accent-dim);padding:2px 7px;border-radius:5px}
+  .act-edit .ahd .rng{font-family:var(--mono);font-size:.6rem;color:var(--faint);margin-left:auto}
+
+  .banner{display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--ok-dim);border:1px solid rgba(57,217,138,.3);border-radius:10px;margin-bottom:18px;font-size:.78rem}
+  .banner.warn{background:rgba(255,176,32,.1);border-color:rgba(255,176,32,.3)}
+  .banner .x{margin-left:auto;display:flex;gap:7px}
+
+  .empty{padding:60px 20px;text-align:center;color:var(--faint)}
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--card2);border:1px solid var(--accent);color:var(--text);padding:11px 18px;border-radius:9px;font-size:.78rem;font-weight:600;opacity:0;transition:.25s;z-index:50;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  input[type=file]{display:none}
+  .reorder{display:flex;flex-direction:column;gap:1px}
+  .reorder button{font-size:.6rem;color:var(--faint);padding:0 4px;line-height:1.1}
+  .reorder button:hover{color:var(--accent)}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="dot"></span>
+    <div>
+      <div class="name">Console d'édition</div>
+      <div class="sub mono">escape-engine · v1</div>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <div class="proj-pill"><b id="pill-name">—</b><span class="v" id="pill-ver">v1</span></div>
+  <span class="savestate" id="savestate">brouillon non sauvegardé</span>
+  <button class="btn ghost sm" onclick="document.getElementById('importer').click()">⇪ Importer</button>
+  <button class="btn primary sm" onclick="exportConfig()">⇩ Exporter config.json</button>
+  <input type="file" id="importer" accept="application/json,.json" onchange="importConfig(event)">
+</header>
+
+<div id="restore-banner"></div>
+
+<div class="shell">
+  <aside>
+    <div class="nav">
+      <button data-view="enigmas" class="active" onclick="setView('enigmas')">Énigmes</button>
+      <button data-view="project" onclick="setView('project')">Projet</button>
+      <button data-view="acts" onclick="setView('acts')">Actes</button>
+      <button data-view="json" onclick="setView('json')">JSON</button>
+    </div>
+    <div id="sidebar-body" style="display:flex;flex-direction:column;min-height:0;flex:1"></div>
+  </aside>
+
+  <main><div id="editor" class="panel"></div></main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════ DONNÉES PAR DÉFAUT (vos 40 énigmes) ════════════
+const DEFAULT_CONFIG = {
+  "schemaVersion": 1,
+  "meta": {
+    "id": "projet-1986",
+    "name": "PROJET 1986 : RÉACTIVATION",
+    "client": "",
+    "note": "Anniversaire 40 ans",
+    "version": 1,
+    "createdAt": "2026-06-17T09:50:30.589Z",
+    "updatedAt": "2026-06-17T09:50:30.589Z"
+  },
+  "branding": {
+    "docTitle": "PROJET 1986 : RÉACTIVATION",
+    "logo": "PROJET 1986",
+    "subtitle": "Système de réactivation",
+    "codename": "/// PROJET 1986 ///",
+    "classified": "/// CONFIDENTIEL ///",
+    "avatar": "icons/avatar.png"
+  },
+  "actBoundaries": [
+    0,
+    8,
+    16,
+    24,
+    32,
+    40
+  ],
+  "acts": [
+    {
+      "name": "INITIALISATION",
+      "subtitle": "Vérification d'identité"
+    },
+    {
+      "name": "CALIBRATION",
+      "subtitle": "Ajustement cognitifs"
+    },
+    {
+      "name": "ÉPREUVES",
+      "subtitle": "Résistance mentale"
+    },
+    {
+      "name": "ACTIVATION",
+      "subtitle": "Synchronisation sécurisée"
+    },
+    {
+      "name": "VALIDATION",
+      "subtitle": "Séquence finale"
+    }
+  ],
+  "enigmas": [
+    {
+      "id": 1,
+      "type": "Culture",
+      "format": "text",
+      "narrative": "SCAN BIOMÉTRIQUE > Vérification des centres d'intérêt >",
+      "question": "Même s'il n'est pas menuisier,\n il a quand même ciré beaucoup de parquets.\n\nMalgré ses nombreux talents,\n les briques n'ont jamais fait partie de ses habitudes.\n\nIl a été au sommet,\n mais tout le monde le souhaite à ses pieds.\n\nQui est-ce ?",
+      "answer": [
+        "jordan",
+        "michael jordan"
+      ],
+      "hint": "Sa Majesté de l'Air...",
+      "title": "Bricolage"
+    },
+    {
+      "id": 2,
+      "type": "Suite Logique",
+      "format": "text",
+      "narrative": "MODULE LOGIQUE > Séquence numérique incomplète détectée. Analyse requise.",
+      "question": "21  —  22  —  26  —  ?\n\nComplétez la suite.",
+      "answer": [
+        "5",
+        "05"
+      ],
+      "hint": "??/??/????",
+      "title": "La Suite Mystère"
+    },
+    {
+      "id": 3,
+      "type": "Culture",
+      "format": "text",
+      "narrative": "MODULE CULTUREL > Scan des références générationnelles > Décennie 1986.",
+      "question": "1986, tu pointais le bout de ton nez.\n\nLa même année il décide de prendre un peu de congés.\n\nVoiture de sport, casquette.\n\nEn une seule journée il vous a marqué pendant des années.\n\nQui est-ce ?",
+      "answer": [
+        "ferris bueller",
+        "ferris",
+        "bueller"
+      ],
+      "hint": "\"Life moves pretty fast...\" 🎬",
+      "title": "La légende"
+    },
+    {
+      "id": 4,
+      "type": "Culture",
+      "format": "text",
+      "narrative": "SCAN BIOMÉTRIQUE > Vérification des capacités élémentaires",
+      "question": "Grâce à moi, elle est belle !\n\nQui suis-je ?",
+      "answer": [
+        "b"
+      ],
+      "hint": "Grâce à moi, on est bon",
+      "title": "Belle"
+    },
+    {
+      "id": 5,
+      "type": "Interaction",
+      "format": "lightdetect",
+      "narrative": "ALERTE > Module optique compromis.",
+      "question": "Et la lumière fût...",
+      "answer": [
+        "ok"
+      ],
+      "hint": "Passez de l'obsurité à la lumière",
+      "title": "Et la lumière fut"
+    },
+    {
+      "id": 6,
+      "type": "Nombre",
+      "format": "text",
+      "narrative": "MODULE logique > Sauras-tu révéler les bons nombres.",
+      "question": "Quels sont les trois nombres positifs qui donnent le même résultat quand on les multiplie et quand on les additionne ensemble ?",
+      "answer": [
+        "1,2,3"
+      ],
+      "hint": "C'est mort... à toi de trouver !",
+      "title": "+ & x"
+    },
+    {
+      "id": 7,
+      "type": "Histoire",
+      "format": "text",
+      "narrative": "SCAN BIOMÉTRIQUE > Vérification des centres d'intérêt.",
+      "question": "Je peux me faire attendre.\n\nMais en général je finis par pousser.\n\nJe suis moins fournie que ton espoir de m'avoir.\n\nQui suis-je ?",
+      "answer": [
+        "barbe"
+      ],
+      "hint": "C'est mort ! A toi de trouver !",
+      "title": "Hope"
+    },
+    {
+      "id": 8,
+      "type": "Audio Père Fouras",
+      "format": "audio",
+      "audioId": "fouras-audio",
+      "hasWave": true,
+      "hasSpeedControl": true,
+      "hasDownload": true,
+      "narrative": "INTERCEPTION > Message audio capté. Le Père Fouras a parlé. Décodage nécessaire.",
+      "question": "Trouvez la réponse à l'énigme.",
+      "answer": [
+        "pas",
+        "un pas"
+      ],
+      "hint": "... de géant",
+      "title": "Transmission Brouillée"
+    },
+    {
+      "id": 9,
+      "type": "Ieps",
+      "format": "text",
+      "narrative": "MODULE logique > Vérification des capacités d'analyse.",
+      "image": "icons/pieds.png",
+      "question": "Combien de pieds voyez-vous ?",
+      "answer": [
+        "12"
+      ],
+      "hint": "La tête en bas",
+      "title": "Ieps"
+    },
+    {
+      "id": 10,
+      "type": "Suite gourmande",
+      "format": "text",
+      "narrative": "MODULE LOGIQUE > Séquence numérique incomplète détectée. Analyse requise.",
+      "question": "Trouvez le résultat :\n\n🍟  -  8  -  9  -  1\n1  -  9  -🍔-  1\n0  -  2  -  0  -  2\n2  -  0  -  1  -  🍪\n🍕-  2  -  0  -  2\n\n🍔  x  🍕  +  🍪 - 2 x 🍟 = ?",
+      "answer": [
+        "40"
+      ],
+      "hint": "Vois-tu les années ?",
+      "title": "La Faim"
+    },
+    {
+      "id": 11,
+      "type": "Devinette",
+      "format": "text",
+      "narrative": "MODULE LOGIQUE > Niveau 2 > Capacité de déduction sous pression.",
+      "question": "Je suis plus puissant que Dieu.\n\nJe suis plus méchant que le diable.\n\nLe pauvre en possède.\n\nLe riche en manque.\n\nEt si vous me mangez, vous mourrez.",
+      "answer": [
+        "rien"
+      ],
+      "hint": "Tout",
+      "title": "L'essentiel"
+    },
+    {
+      "id": 12,
+      "type": "Devinette",
+      "format": "text",
+      "narrative": "MODULE ANALYTIQUE > Épreuve de raisonnement. Concentration maximale requise.",
+      "question": "Tu es dans un bus qui part avec 6 passagers dont 4 ont les yeux bleus et 2 ont les yeux verts\n\nÀ l'arrêt suivant, 2 montent et 3 descendent.\nAu suivant, 5 descendent et 4 montent.\n\nDe quelle couleur sont les yeux du chauffeur ?",
+      "answer": [
+        "noir",
+        "marron",
+        "noirs",
+        "marrons",
+        "brun",
+        "bruns"
+      ],
+      "hint": "QUI conduit le bus ? 👀",
+      "title": "Le Piège du Bus"
+    },
+    {
+      "id": 13,
+      "type": "Culture",
+      "format": "text",
+      "narrative": "MODULE CULTUREL > Scan local > Identité.",
+      "question": "L'amiral mort flotta dans ma chair pour rentrer au port, depuis, mon surnom a le goût du sang.\n\n Colomb baptisa une de mes mères du nom d'une vierge espagnole\n\nJe naît du berceau de la terre, et meurs en gorge d'homme.\n\nQui suis-je ?",
+      "answer": [
+        "rhum",
+        "le rhum",
+        "rum"
+      ],
+      "hint": "Tchin tchin",
+      "title": "L'Or"
+    },
+    {
+      "id": 14,
+      "type": "0101",
+      "format": "text",
+      "narrative": "MODULE PROGRAMMATION > Un code a été dissimulé sauras-tu le révéler.",
+      "question": "01010100 01110010 01101001 01110000 01101100 01100101 00100000 01110011 01100001 01110101 01110100",
+      "answer": [
+        "triple saut"
+      ],
+      "hint": "3 fois tu voleras",
+      "title": "La machine"
+    },
+    {
+      "id": 15,
+      "type": "Devinette",
+      "format": "text",
+      "narrative": "MODULE LOGIQUE > Niveau 2 > Capacité de déduction sous pression.",
+      "iframe": "https://scape.enepe.fr/ressources/cesar/index2.html",
+      "question": "🥑 - AVOCAT - 🥑\n\nV'SWZYBDKXD M'OCD ZKC VK MREDO M'OCD V'KDDBBSCCKQO",
+      "answer": [
+        "L'IMPORTANT C'EST PAS LA CHUTE, C'EST L'ATTERRISSAGE"
+      ],
+      "hint": "A vo cat",
+      "title": "Avocat"
+    },
+    {
+      "id": 16,
+      "type": "Position GPS",
+      "format": "gps",
+      "narrative": "MODULE GPS > Signal crypté détecté. Déplacement physique requis pour décoder.",
+      "question": "Un signal a été localisé. Déplacez-vous jusqu'à la zone cible pour décrypter le message secret.",
+      "gpsTarget": {
+        "lat": 16.199749,
+        "lng": -61.467685
+      },
+      "gpsRadius": 35,
+      "gpsSecret": "OMBRE",
+      "answer": [
+        "ombre",
+        "l'ombre"
+      ],
+      "hint": "Approchez-vous du point cible... le radar vous guide !",
+      "title": "Signal Localisé"
+    },
+    {
+      "id": 17,
+      "type": "Culture",
+      "format": "text",
+      "narrative": "MODULE CULTURE > Vérification des centres d'intérêt.",
+      "question": "Je suis né muet mais après 40 ans,\n\nj'ai enfin fini par parler.\n\nQui suis-je ?",
+      "answer": [
+        "cinéma"
+      ],
+      "hint": "Des frères à Hollywood",
+      "title": "Parole"
+    },
+    {
+      "id": 18,
+      "type": "Culture",
+      "format": "text",
+      "narrative": "SCAN BIOMÉTRIQUE > Vérification des capacités d'analyse.",
+      "question": "Je suis entre 188 et 190,\n\n mais je ne suis pas 189.\n\nQui suis-je ?",
+      "answer": [
+        "et"
+      ],
+      "hint": "Littéralement entre",
+      "title": "188-190"
+    },
+    {
+      "id": 19,
+      "type": "Faux Bug",
+      "format": "fakebug",
+      "narrative": "",
+      "question": "",
+      "answer": [
+        "ok"
+      ],
+      "hint": "Patience... le système va se rétablir 😏",
+      "title": "/// ERREUR SYSTÈME ///"
+    },
+    {
+      "id": 20,
+      "type": "Histoire",
+      "format": "text",
+      "narrative": "SCAN BIOMÉTRIQUE > Vérification des centres d'intérêt",
+      "question": "On fait appel à moi les jours de pluie,\n\nMais ce jour-là, j'étais au mauvais endroit.\n\nJe suis parfois monté, puis démonté...\n\nQui suis-je ?",
+      "answer": [
+        "essuie glaces,essuie-glaces"
+      ],
+      "hint": "",
+      "title": "Humide"
+    },
+    {
+      "id": 21,
+      "type": "Rébus",
+      "format": "rebus",
+      "narrative": "MODULE DÉCRYPTAGE > Séquence visuelle détectée. Interprétation requise.",
+      "question": "Déchiffrez ce rébus :",
+      "rebusItems": [
+        "🐏",
+        "➕",
+        "♨️"
+      ],
+      "rebusHint": "Animal + Sensation",
+      "answer": [
+        "ramothe",
+        "ram hot",
+        "ramotte"
+      ],
+      "hint": "C'est mort ! A toi de jouer !",
+      "title": "Symboles Cachés"
+    },
+    {
+      "id": 22,
+      "type": "Mathématiques",
+      "format": "text",
+      "narrative": "MODULE CALCUL > Équation à résoudre. Précision requise.",
+      "question": "J'ajoute 2 au produit de deux nombres consécutifs supérieurs à 0 et j'obtiens 14.\n\nQuels sont ces deux nombres ?\n(Répondez sous la forme : X et Y)",
+      "answer": [
+        "3 et 4",
+        "3et4",
+        "3,4",
+        "3 4"
+      ],
+      "hint": "? × (? + 1) + 2 = 14 → ? × (? + 1) = 12",
+      "title": "L'Équation"
+    },
+    {
+      "id": 23,
+      "type": "Devinette",
+      "format": "text",
+      "narrative": "MODULE LOGIQUE > Niveau 2 > Capacité de déduction sous pression.",
+      "question": "Un homme regarde un portrait et dit :\n\n« Je n'ai ni frère ni sœur, mais le père de cet homme est le fils de mon père. »\n\nQui est la personne sur le portrait ?",
+      "answer": [
+        "son fils",
+        "fils",
+        "mon fils"
+      ],
+      "hint": "C'est mort ! A toi de trouver",
+      "title": "Le Portrait"
+    },
+    {
+      "id": 24,
+      "type": "Position GPS",
+      "format": "gps",
+      "narrative": "MODULE GPS > Signal crypté détecté. Déplacement physique requis pour décoder.",
+      "question": "Un signal a été localisé. Déplacez-vous jusqu'à la zone cible pour décrypter le message secret.",
+      "gpsTarget": {
+        "lat": 16.199749,
+        "lng": -61.467685
+      },
+      "gpsRadius": 500,
+      "gpsSecret": "OMBRE",
+      "answer": [
+        "ombre",
+        "l'ombre"
+      ],
+      "hint": "Approchez-vous du point cible... le radar vous guide !",
+      "title": "Signal Localisé"
+    },
+    {
+      "id": 25,
+      "type": "Géoguessing",
+      "format": "text",
+      "narrative": "MODULE GEOGRAPHIQUE > Capacité de repérage en mission.",
+      "image": "icons/lisbonne.png",
+      "iframe": "https://lockee.fr/o/EmWCssUf?nobg?noft",
+      "answer": [
+        "woosah"
+      ],
+      "hint": "Ch'est pas Ch'an Franchichchau",
+      "title": "Guess where"
+    },
+    {
+      "id": 26,
+      "type": "Scan NFC",
+      "format": "nfc",
+      "narrative": "MODULE NFC > Tag détecté à proximité. Approchez votre appareil.",
+      "question": "<!> Alerte sécurité <!> \n\n Scanne de vérification obligatoire",
+      "nfcTagId": "04:EE:01:0A:30:1F:94",
+      "answer": [
+        "ok"
+      ],
+      "hint": "Utiliser votre mobile scanner pour detecter le signal",
+      "title": "Signal Fantôme"
+    },
+    {
+      "id": 27,
+      "type": "Devinette",
+      "format": "text",
+      "narrative": "MODULE CULTURE > Pensée abstraite requise.",
+      "question": "Je suis toujours devant toi,\n\nMais tu ne peux jamais me rattraper.\n\nPlus tu avances, plus j'avance aussi.\n\nQui suis-je ?",
+      "answer": [
+        "futur",
+        "le futur",
+        "l'avenir",
+        "avenir",
+        "demain"
+      ],
+      "hint": "Nombreux veulent y voir, d'autres veulent en revenir",
+      "title": "L'Insaisissable"
+    },
+    {
+      "id": 28,
+      "type": "Cadena",
+      "format": "text",
+      "narrative": "MODULE ACTION > Niveau 2 > Capacité de manipulation prolongée.",
+      "question": "Derrière chaque agent se trouve la clé... \n\n à toi de la trouver pour la faire parler.",
+      "answer": [
+        "Bas les pattes tête de poule !"
+      ],
+      "hint": "Regarde derrière toi...",
+      "title": "Brain"
+    },
+    {
+      "id": 29,
+      "type": "Souvenir",
+      "format": "text",
+      "narrative": "MODULE MEMOIRE > Niveau 3 > Capacité de mémorisation avancée.",
+      "image": "icons/jetpack.gif",
+      "question": "Agent si vous voulez poursuivre la mission, separez les éléments de votre réponse par ''-''",
+      "answer": [
+        "L1-L2-R1-R2-Haut-Bas-Gauche-Droite-L1-L2-R1-R2-Haut-Bas-Gauche-Droite"
+      ],
+      "hint": "cheat code",
+      "title": "Carl Johnson"
+    },
+    {
+      "id": 30,
+      "type": "Cadena",
+      "format": "text",
+      "narrative": "MODULE LOGIQUE > Un code a été dissimulé, sauras-tu le révéler.",
+      "image2": "icons/cadenacryptex.png",
+      "iframe2": "https://lockee.fr/o/iR33Tu2z?nobg?noft",
+      "question": "",
+      "answer": [
+        "Ace ventura"
+      ],
+      "hint": "C'est mort ! A toi de trouver !",
+      "title": "Le cadena"
+    },
+    {
+      "id": 31,
+      "type": "Code",
+      "format": "keypad",
+      "narrative": "MODULE SÉCURITÉ > Code d'accès requis. 4 chiffres. Aucune erreur tolérée.",
+      "question": "Entrez le code d'activation.",
+      "answer": [
+        "3827"
+      ],
+      "hint": "🔊🔊🔊🔊",
+      "title": "Code d'Activation"
+    },
+    {
+      "id": 32,
+      "type": "Vision Secrète",
+      "format": "text",
+      "narrative": "MODULE SOUVENIR > Une bobine temporelle a été dissimulée.",
+      "question": "Trouvez la bobine pour trouver le lieu secret.",
+      "answer": [
+        "le loft"
+      ],
+      "hint": "OK bobine temporelle, c'est peut être un grand mot... on va dire étiquette",
+      "title": "Bobine"
+    },
+    {
+      "id": 33,
+      "type": "Géoguessing",
+      "format": "text",
+      "narrative": "MODULE GEOGRAPHIQUE > Capacité de repérage en mission.",
+      "iframe": "https://lockee.fr/o/YeowD45g?nobg?noft",
+      "question": "Je suis né entre deux mondes instables,\nNi tout à fait terre, ni tout à fait mer.NOn me croit immobile, mais je change sans cesse,\nCar ceux qui m’entourent avancent et reculent sans fin.\nJ’ai défié le temps, les assauts et les hommes,\nGrimpant vers le ciel comme une prière de pierre.\nRois, pèlerins et curieux m’ont convoité,\nMais seuls les patients savent quand je me révèle.\nQui suis-je ?",
+      "answer": [
+        "un type fier, un type fort, yul brenner, junior bevil"
+      ],
+      "hint": "C'est mort ! A toi de trouver !???",
+      "title": "Guess where"
+    },
+    {
+      "id": 34,
+      "type": "Labyrinthe",
+      "format": "text",
+      "narrative": "MODULE calcul > Un code a été dissimulé sur un document physique. Seul le chemin du labyrinthe peut le révéler.",
+      "image": "icons/labyrinthe_opp_c.png",
+      "question": "",
+      "answer": [
+        "FY57X?N3PML90R6ID"
+      ],
+      "hint": "F----[...]----D",
+      "title": "La caltoch"
+    },
+    {
+      "id": 35,
+      "type": "Cadena",
+      "format": "text",
+      "narrative": "MODULE LOGIQUE > Niveau 2 > Capacité de déduction sous pression.",
+      "iframe": "https://lockee.fr/o/a3ds9RFX?nobg?noft",
+      "question": "A vous tous vous atteignez 288",
+      "answer": [
+        "le prince de bel air"
+      ],
+      "hint": "288 ça fait vieux !",
+      "title": "Click"
+    },
+    {
+      "id": 36,
+      "type": "Géoguessing",
+      "format": "text",
+      "narrative": "MODULE GEOGRAPHIQUE > Capacité de repérage en mission.",
+      "image": "icons/nimes.png",
+      "iframe": "https://lockee.fr/o/gqcbvbxg?nobg?noft",
+      "answer": [
+        "fais dodo"
+      ],
+      "hint": "Les arènes de ",
+      "title": "Guess where"
+    },
+    {
+      "id": 37,
+      "type": "Mots mélangés",
+      "format": "text",
+      "narrative": "MODULE LOGIQUE > Niveau 2 > Capacité de déduction sous pression.",
+      "iframe": "https://ladigitale.dev/digilock/#/l/69dbf54b65713?vue=apercu",
+      "question": "Cherche et trouve",
+      "answer": [
+        "sherman"
+      ],
+      "hint": "C'est mort ! A toi de trouver !",
+      "title": "Trouvé"
+    },
+    {
+      "id": 38,
+      "type": "Logique",
+      "format": "text",
+      "narrative": "MODULE ACTION > Niveau 2 > Capacité de manipulation prolongée.",
+      "iframe": "https://lockee.fr/o/4Y0EUfoe?nobg?noft",
+      "question": "???",
+      "answer": [
+        "Trinity"
+      ],
+      "hint": "Blanc b...",
+      "title": "Box"
+    },
+    {
+      "id": 39,
+      "type": "Piano",
+      "format": "audio",
+      "audioId": "melody-audio",
+      "hasWave": false,
+      "hasSpeedControl": false,
+      "hasDownload": false,
+      "narrative": "MODULE LOGIQUE > Niveau 2 > Capacité de déduction sous pression.",
+      "iframe": "https://lockee.fr/o/NEfc604n?nobg&noft",
+      "question": "A toi de jouer l'artiste !",
+      "answer": [
+        "stephen"
+      ],
+      "hint": "C'est mort ! A toi de trouver !",
+      "title": "Lalala"
+    },
+    {
+      "id": 40,
+      "type": "Puzzle Final",
+      "format": "puzzle",
+      "narrative": "SÉQUENCE FINALE > Reconstituez l'image pour déverrouiller la récompense.",
+      "question": "Remettez les pièces dans l'ordre pour révéler le message final.\n\nAppuyez sur une pièce adjacente à l'espace vide pour la déplacer.",
+      "answer": [
+        "ok"
+      ],
+      "hint": "Déplacez les pièces une à une vers l'espace vide, comme un taquin.",
+      "title": "La Révélation"
+    }
+  ]
+};
+
+const FORMATS = [
+  {v:"text",       l:"Texte / réponse libre"},
+  {v:"keypad",     l:"Clavier numérique (code)"},
+  {v:"audio",      l:"Audio (analyse sonore)"},
+  {v:"gps",        l:"GPS (géolocalisation)"},
+  {v:"nfc",        l:"Scan NFC"},
+  {v:"rebus",      l:"Rébus (symboles)"},
+  {v:"lightdetect",l:"Détection de lumière"},
+  {v:"camera",     l:"Caméra / filtre couleur"},
+  {v:"fakebug",    l:"Faux bug système"},
+  {v:"puzzle",     l:"Puzzle / taquin final"},
+];
+const FORMAT_LABEL = Object.fromEntries(FORMATS.map(f=>[f.v,f.l]));
+
+const DRAFT_KEY = "escape_admin_draft";
+
+let CFG = null;
+let view = "enigmas";
+let sel = 0;            // index énigme sélectionnée
+let dirtySinceExport = false;
+let configFileName = "config.json";   // nom du fichier à (ré)exporter
+
+// ════════════ CHARGEMENT ════════════
+function configFileFromURL(){
+  const p = new URLSearchParams(location.search).get('config');
+  if(p && /^[\w.-]+\.json$/.test(p)){ configFileName = p; return './'+p; }
+  return './config.json';
+}
+async function boot(){
+  let live = null;
+  try{
+    const r = await fetch(configFileFromURL(),{cache:'no-cache'});
+    if(r.ok) live = await r.json();
+  }catch(e){}
+  CFG = clone(live || DEFAULT_CONFIG);
+  normalize(CFG);
+  render();
+
+  // brouillon local non exporté ?
+  const draftRaw = localStorage.getItem(DRAFT_KEY);
+  if(draftRaw){
+    try{
+      const d = JSON.parse(draftRaw);
+      if(d && d.config && d.config.meta){
+        showRestoreBanner(d);
+      }
+    }catch(e){}
+  }
+}
+function showRestoreBanner(d){
+  const when = new Date(d.savedAt||Date.now()).toLocaleString('fr-FR');
+  document.getElementById('restore-banner').innerHTML =
+    `<div class="banner warn" style="max-width:760px;margin:14px auto 0;">
+       <span>Un brouillon non exporté a été trouvé (« ${esc(d.config.meta.name||'sans nom')} », ${when}).</span>
+       <span class="x">
+         <button class="btn sm" onclick="restoreDraft()">Restaurer</button>
+         <button class="btn ghost sm" onclick="dismissBanner()">Ignorer</button>
+       </span>
+     </div>`;
+}
+function restoreDraft(){
+  const d = JSON.parse(localStorage.getItem(DRAFT_KEY));
+  CFG = clone(d.config); normalize(CFG); sel=0; render();
+  dismissBanner(); toast("Brouillon restauré");
+}
+function dismissBanner(){ document.getElementById('restore-banner').innerHTML=''; }
+
+// ════════════ NORMALISATION / UTILS ════════════
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function normalize(c){
+  c.schemaVersion = c.schemaVersion||1;
+  c.meta = c.meta||{}; c.branding = c.branding||{};
+  c.acts = c.acts||[]; c.enigmas = c.enigmas||[];
+  if(!Array.isArray(c.actBoundaries)||!c.actBoundaries.length){
+    // déduit des actes si absent : répartition uniforme
+    c.actBoundaries = [0, c.enigmas.length];
+  }
+  c.enigmas.forEach((e,i)=>{ if(e.id==null) e.id=i+1; if(!Array.isArray(e.answer)) e.answer = e.answer?[String(e.answer)]:[]; });
+}
+function markDirty(){
+  dirtySinceExport = true;
+  CFG.meta.updatedAt = new Date().toISOString();
+  saveDraft();
+  syncTopbar();
+}
+function saveDraft(){
+  try{
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({savedAt:Date.now(),config:CFG}));
+    setSave("brouillon enregistré", true);
+  }catch(e){ setSave("sauvegarde locale impossible", false); }
+}
+let saveTimer=null;
+function setSave(txt,on){
+  const el=document.getElementById('savestate');
+  el.textContent = on ? "✓ "+txt : txt;
+  el.classList.toggle('on', !!on);
+}
+function syncTopbar(){
+  document.getElementById('pill-name').textContent = CFG.meta.name || "Sans titre";
+  document.getElementById('pill-ver').textContent = "v"+(CFG.meta.version||1);
+}
+function toast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),1900);
+}
+
+// ════════════ RENDER ════════════
+function setView(v){ view=v; document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===v)); render(); }
+function render(){
+  syncTopbar();
+  renderSidebar();
+  renderEditor();
+}
+
+function actIndexForEnigma(i){
+  const b=CFG.actBoundaries;
+  for(let a=0;a<b.length-1;a++){ if(i>=b[a] && i<b[a+1]) return a; }
+  return Math.max(0,b.length-2);
+}
+
+function renderSidebar(){
+  const body=document.getElementById('sidebar-body');
+  if(view==='enigmas'){
+    let h=`<div class="list-head"><span class="lbl">${CFG.enigmas.length} énigmes</span>
+      <button class="btn primary sm" onclick="addEnigma()">+ Ajouter</button></div>
+      <div class="enig-list">`;
+    let curAct=-1;
+    CFG.enigmas.forEach((e,i)=>{
+      const a=actIndexForEnigma(i);
+      if(a!==curAct){
+        curAct=a;
+        const act=CFG.acts[a]||{name:"Acte "+(a+1)};
+        h+=`<div class="act-group"><div class="act-bar"><span class="num">${String(a+1).padStart(2,'0')}</span>
+            <span class="nm">${esc(act.name||'')}</span><span class="line"></span></div></div>`;
+      }
+      h+=`<div class="erow ${i===sel?'active':''}" onclick="selectEnigma(${i})">
+            <span class="idx">${String(i+1).padStart(2,'0')}</span>
+            <div class="meta"><div class="t">${esc(e.title||'(sans titre)')}</div>
+            <div class="fmt"><span class="fmt-chip">${esc(e.format||'?')}</span></div></div>
+          </div>`;
+    });
+    h+=`</div>`;
+    body.innerHTML=h;
+  } else {
+    body.innerHTML=`<div class="list-head"><span class="lbl">Section</span></div>
+      <div style="padding:4px 14px;color:var(--dim);font-size:.78rem;line-height:1.7">
+        ${view==='project'?'Identité du projet, branding et écran d\'accueil.':''}
+        ${view==='acts'?'Les '+CFG.acts.length+' actes et leur découpage.':''}
+        ${view==='json'?'Aperçu du fichier config.json généré.':''}
+      </div>`;
+  }
+}
+
+function renderEditor(){
+  const ed=document.getElementById('editor');
+  if(view==='project') return ed.innerHTML=tplProject();
+  if(view==='acts')    return ed.innerHTML=tplActs();
+  if(view==='json')    return ed.innerHTML=tplJson();
+  // enigmas
+  if(!CFG.enigmas.length){ ed.innerHTML=`<div class="empty">Aucune énigme. <button class="btn primary sm" onclick="addEnigma()">+ Ajouter la première</button></div>`; return; }
+  if(sel>=CFG.enigmas.length) sel=CFG.enigmas.length-1;
+  ed.innerHTML=tplEnigma(CFG.enigmas[sel], sel);
+}
+
+// ── binding helpers ──
+function bind(path, val){ setPath(CFG, path, val); markDirty(); }
+function bindRender(path, val){ setPath(CFG, path, val); markDirty();
+  if(path.startsWith('enigmas.'+sel+'.title')||path.endsWith('.format')||path.startsWith('acts')||path.startsWith('meta')) render();
+  else if(view==='enigmas') renderPreview();
+}
+function setPath(o,path,val){
+  const ks=path.split('.'); let t=o;
+  for(let i=0;i<ks.length-1;i++){ const k=isNaN(ks[i+1])?ks[i]:ks[i]; if(t[k]==null) t[k]= isNaN(ks[i+1])?{}:[]; t=t[k]; }
+  t[ks[ks.length-1]]=val;
+}
+
+// ════════════ TEMPLATES ════════════
+function tplProject(){
+  const m=CFG.meta, b=CFG.branding;
+  return `
+  <div class="panel-head"><div><div class="eyebrow">Configuration</div><h2>Projet & branding</h2></div></div>
+  <fieldset class="box"><legend>Identité du projet</legend>
+    ${inp('Nom du projet','meta.name',m.name,'Titre interne — apparaît dans le tableau de bord.')}
+    <div class="grid2">
+      ${inp('Client','meta.client',m.client||'')}
+      ${inp('Version','meta.version',m.version||1,'','number')}
+    </div>
+    ${inp('Note','meta.note',m.note||'')}
+  </fieldset>
+  <fieldset class="box"><legend>Écran d'accueil (branding)</legend>
+    ${inp('Titre de l\'onglet','branding.docTitle',b.docTitle||'')}
+    ${inp('Logo (texte)','branding.logo',b.logo||'')}
+    ${inp('Sous-titre','branding.subtitle',b.subtitle||'')}
+    <div class="grid2">
+      ${inp('Codename (hub)','branding.codename',b.codename||'')}
+      ${inp('Mention « confidentiel »','branding.classified',b.classified||'')}
+    </div>
+    ${inp('Avatar (chemin image)','branding.avatar',b.avatar||'','Ex : icons/avatar.png')}
+  </fieldset>`;
+}
+
+function tplActs(){
+  const b=CFG.actBoundaries;
+  let h=`<div class="panel-head"><div><div class="eyebrow">Structure</div><h2>Actes</h2></div></div>
+   <div class="banner"><span>Le découpage repose sur l'ordre des énigmes. Chaque acte couvre une plage d'index.</span></div>`;
+  CFG.acts.forEach((a,i)=>{
+    const start=b[i]!=null?b[i]:0, end=b[i+1]!=null?b[i+1]:CFG.enigmas.length;
+    h+=`<div class="act-edit">
+      <div class="ahd"><span class="n">ACTE ${String(i+1).padStart(2,'0')}</span>
+        <span class="rng">énigmes ${start+1} → ${end}</span></div>
+      ${inp('Nom','acts.'+i+'.name',a.name||'')}
+      ${inp('Sous-titre','acts.'+i+'.subtitle',a.subtitle||'')}
+    </div>`;
+  });
+  h+=`<fieldset class="box"><legend>Bornes (avancé)</legend>
+    ${inp('Index de séparation des actes','actBoundaries',(b||[]).join(', '),'Liste d\'index croissants, du premier (0) au total. Ex : 0, 8, 16, 24, 32, 40.','bounds')}
+   </fieldset>`;
+  return h;
+}
+
+function tplJson(){
+  return `<div class="panel-head"><div><div class="eyebrow">Export</div><h2>config.json</h2></div>
+    <div class="rowbtns">
+      <button class="btn sm" onclick="copyJson()">⧉ Copier</button>
+      <button class="btn primary sm" onclick="exportConfig()">⇩ Télécharger</button>
+    </div></div>
+    <pre class="json" id="jsonview">${esc(JSON.stringify(buildExport(),null,2))}</pre>`;
+}
+
+function tplEnigma(e,i){
+  const f=e.format||'text';
+  const answers=(e.answer||[]).join('\n');
+  let extra='';
+
+  // médias (dispo pour tous formats — vos énigmes texte les utilisent)
+  extra+=`<fieldset class="box"><legend>Médias & intégrations</legend>
+    <div class="grid2">
+      ${inp('Image','enigmas.'+i+'.image',e.image||'','Chemin, ex : icons/pieds.png')}
+      ${inp('Image 2','enigmas.'+i+'.image2',e.image2||'')}
+    </div>
+    ${inp('Iframe (cadenas externe…)','enigmas.'+i+'.iframe',e.iframe||'','URL d\'un module externe (lockee, etc.)')}
+    ${inp('Iframe 2','enigmas.'+i+'.iframe2',e.iframe2||'')}
+  </fieldset>`;
+
+  if(f==='audio'){
+    extra+=`<fieldset class="box"><legend>Audio</legend>
+      ${inp('ID de l\'élément audio','enigmas.'+i+'.audioId',e.audioId||'','Ex : fouras-audio')}
+      <div class="grid2">
+        ${chk('Onde sonore (waveform)','enigmas.'+i+'.hasWave',!!e.hasWave)}
+        ${chk('Contrôle de vitesse','enigmas.'+i+'.hasSpeedControl',!!e.hasSpeedControl)}
+      </div>
+      ${chk('Téléchargement autorisé','enigmas.'+i+'.hasDownload',!!e.hasDownload)}
+    </fieldset>`;
+  }
+  if(f==='gps'){
+    const g=e.gpsTarget||{};
+    extra+=`<fieldset class="box"><legend>Géolocalisation</legend>
+      <div class="grid2">
+        ${inp('Latitude cible','enigmas.'+i+'.gpsTarget.lat',g.lat!=null?g.lat:'','','number')}
+        ${inp('Longitude cible','enigmas.'+i+'.gpsTarget.lng',g.lng!=null?g.lng:'','','number')}
+      </div>
+      <div class="grid2">
+        ${inp('Rayon (m)','enigmas.'+i+'.gpsRadius',e.gpsRadius!=null?e.gpsRadius:'','','number')}
+        ${inp('Mot secret révélé','enigmas.'+i+'.gpsSecret',e.gpsSecret||'')}
+      </div>
+    </fieldset>`;
+  }
+  if(f==='nfc'){
+    extra+=`<fieldset class="box"><legend>NFC</legend>
+      ${inp('Serial du tag NFC','enigmas.'+i+'.nfcTagId',e.nfcTagId||'','Ex : 04:EE:01:0A:30:1F:94')}
+    </fieldset>`;
+  }
+  if(f==='rebus'){
+    extra+=`<fieldset class="box"><legend>Rébus</legend>
+      ${ta('Symboles (un par ligne)','enigmas.'+i+'.rebusItems',(e.rebusItems||[]).join('\\n'),'list')}
+      ${inp('Indice du rébus','enigmas.'+i+'.rebusHint',e.rebusHint||'')}
+    </fieldset>`;
+  }
+
+  return `
+  <div class="panel-head">
+    <div><div class="eyebrow">Énigme ${String(i+1).padStart(2,'0')} · ${esc(FORMAT_LABEL[f]||f)}</div>
+    <h2>${esc(e.title||'(sans titre)')}</h2></div>
+    <div class="rowbtns">
+      <button class="btn sm" onclick="moveEnigma(${i},-1)" ${i===0?'disabled style=opacity:.4':''}>↑</button>
+      <button class="btn sm" onclick="moveEnigma(${i},1)" ${i===CFG.enigmas.length-1?'disabled style=opacity:.4':''}>↓</button>
+      <button class="btn sm" onclick="dupEnigma(${i})">⧉ Dupliquer</button>
+      <button class="btn ghost sm danger" onclick="delEnigma(${i})">Supprimer</button>
+    </div>
+  </div>
+
+  <div class="grid2">
+    ${inp('Titre','enigmas.'+i+'.title',e.title||'')}
+    ${inp('Type (libellé libre)','enigmas.'+i+'.type',e.type||'','Ex : Culture, Devinette…')}
+  </div>
+  ${sel_field('Format (mécanique)','enigmas.'+i+'.format',f)}
+
+  ${ta('Narration (texte d\'ambiance)','enigmas.'+i+'.narrative',e.narrative||'')}
+  ${ta('Question / énoncé','enigmas.'+i+'.question',e.question||'')}
+  ${ta('Réponses acceptées (une par ligne)','enigmas.'+i+'.answer',answers,'list')}
+  ${ta('Indice','enigmas.'+i+'.hint',e.hint||'','',true)}
+
+  ${extra}
+
+  <div class="field"><label>Aperçu joueur</label><div id="pv-wrap">${previewHtml(e)}</div></div>
+  `;
+}
+
+// ── widget builders ──
+function inp(label,path,val,help,type){
+  const t=type==='number'?'number':'text';
+  const onin = type==='bounds'
+    ? `onBoundsInput(this.value)`
+    : `onInput('${path}',this.value,${type==='number'})`;
+  return `<div class="field"><label>${label}</label>
+    <input class="inp" type="${t}" value="${esc(val)}" oninput="${onin}">
+    ${help?`<div class="help">${help}</div>`:''}</div>`;
+}
+function ta(label,path,val,mode,short){
+  const cls='ta'+(short?' short':'');
+  return `<div class="field"><label>${label}</label>
+    <textarea class="${cls}" oninput="onTextarea('${path}',this.value,'${mode||''}')">${esc(val)}</textarea></div>`;
+}
+function chk(label,path,checked){
+  return `<label class="check"><input type="checkbox" ${checked?'checked':''} onchange="onInput('${path}',this.checked,false)"><span>${label}</span></label>`;
+}
+function sel_field(label,path,cur){
+  return `<div class="field"><label>${label}</label>
+    <select class="sel" onchange="onFormatChange('${path}',this.value)">
+      ${FORMATS.map(f=>`<option value="${f.v}" ${f.v===cur?'selected':''}>${f.l}</option>`).join('')}
+    </select>
+    <div class="help">Change l'interaction. Les champs spécifiques (GPS, NFC, audio…) apparaissent en dessous.</div></div>`;
+}
+
+// ── input handlers ──
+function onInput(path,val,num){ bind(path, num? (val===''?'':Number(val)) : val); if(view==='enigmas') renderPreviewMaybe(path); }
+function onTextarea(path,val,mode){
+  let out=val;
+  if(mode==='list') out=val.split('\n').map(s=>s.trim()).filter(Boolean);
+  bind(path,out);
+  renderPreviewMaybe(path);
+}
+function onFormatChange(path,val){ bind(path,val); render(); }
+function onBoundsInput(v){
+  const arr=v.split(',').map(s=>parseInt(s.trim(),10)).filter(n=>!isNaN(n));
+  CFG.actBoundaries=arr; markDirty();
+}
+function renderPreviewMaybe(path){
+  if(path.match(/\.(narrative|question|hint|image|rebus)/)) renderPreview();
+}
+function renderPreview(){
+  const w=document.getElementById('pv-wrap'); if(w) w.innerHTML=previewHtml(CFG.enigmas[sel]);
+}
+function previewHtml(e){
+  let h='<div class="preview">';
+  if(e.narrative) h+=`<div class="pv-narr">${esc(e.narrative)}</div>`;
+  h+=`<div class="pv-q">${esc(e.question||'(pas d\'énoncé)')}</div>`;
+  if(e.image) h+=`<img class="pv-img" src="${esc(e.image)}" alt="" onerror="this.style.display='none'">`;
+  if(e.hint) h+=`<div class="pv-hint">💡 ${esc(e.hint)}</div>`;
+  h+='</div>';
+  return h;
+}
+
+// ════════════ ACTIONS ÉNIGMES ════════════
+function selectEnigma(i){ sel=i; if(view!=='enigmas'){view='enigmas';document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.view==='enigmas'));} render(); }
+function addEnigma(){
+  const nid=Math.max(0,...CFG.enigmas.map(e=>e.id||0))+1;
+  CFG.enigmas.push({id:nid,type:"Nouvelle",format:"text",narrative:"",question:"",answer:[],hint:"",title:"Nouvelle énigme"});
+  growBoundaries();
+  sel=CFG.enigmas.length-1; markDirty(); render(); toast("Énigme ajoutée");
+}
+function dupEnigma(i){
+  const c=clone(CFG.enigmas[i]);
+  c.id=Math.max(0,...CFG.enigmas.map(e=>e.id||0))+1;
+  c.title=(c.title||'')+" (copie)";
+  CFG.enigmas.splice(i+1,0,c);
+  growBoundaries();
+  sel=i+1; markDirty(); render(); toast("Énigme dupliquée");
+}
+function delEnigma(i){
+  if(!confirm("Supprimer « "+(CFG.enigmas[i].title||'')+" » ?")) return;
+  CFG.enigmas.splice(i,1);
+  shrinkBoundaries();
+  if(sel>=CFG.enigmas.length) sel=Math.max(0,CFG.enigmas.length-1);
+  markDirty(); render(); toast("Énigme supprimée");
+}
+function moveEnigma(i,dir){
+  const j=i+dir; if(j<0||j>=CFG.enigmas.length) return;
+  const t=CFG.enigmas[i]; CFG.enigmas[i]=CFG.enigmas[j]; CFG.enigmas[j]=t;
+  sel=j; markDirty(); render();
+}
+// maintien naïf des bornes quand on ajoute/retire en fin de liste
+function growBoundaries(){ const b=CFG.actBoundaries; if(b&&b.length) b[b.length-1]=CFG.enigmas.length; }
+function shrinkBoundaries(){ const b=CFG.actBoundaries; if(b&&b.length){ for(let k=0;k<b.length;k++) if(b[k]>CFG.enigmas.length) b[k]=CFG.enigmas.length; } }
+
+// ════════════ IMPORT / EXPORT ════════════
+function buildExport(){
+  const out=clone(CFG);
+  out.enigmas.forEach((e,i)=>{ e.id=i+1; });   // renumérotation propre
+  out.meta.updatedAt=new Date().toISOString();
+  return out;
+}
+function exportConfig(){
+  const data=buildExport();
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=configFileName||'config.json'; a.click();
+  URL.revokeObjectURL(url);
+  dirtySinceExport=false;
+  toast("config.json exporté");
+}
+function copyJson(){
+  navigator.clipboard.writeText(JSON.stringify(buildExport(),null,2))
+    .then(()=>toast("JSON copié"))
+    .catch(()=>toast("Copie impossible"));
+}
+function importConfig(ev){
+  const file=ev.target.files[0]; if(!file) return;
+  const rd=new FileReader();
+  rd.onload=()=>{
+    try{
+      const c=JSON.parse(rd.result);
+      if(!c.enigmas) throw new Error("pas d'énigmes");
+      CFG=clone(c); normalize(CFG); sel=0; markDirty(); render();
+      toast("Config importée ("+CFG.enigmas.length+" énigmes)");
+    }catch(e){ alert("Fichier invalide : "+e.message); }
+  };
+  rd.readAsText(file);
+  ev.target.value='';
+}
+
+boot();
+</script>
+</body>
+</html>
