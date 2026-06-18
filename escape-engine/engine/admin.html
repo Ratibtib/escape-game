@@ -826,7 +826,8 @@ const FORMATS = [
 ];
 const FORMAT_LABEL = Object.fromEntries(FORMATS.map(f=>[f.v,f.l]));
 
-const DRAFT_KEY = "escape_admin_draft";
+const DRAFT_PREFIX = "escape_admin_draft:";
+function draftKey(){ return DRAFT_PREFIX + (currentSlug() || "new"); }
 
 let CFG = null;
 let view = "enigmas";
@@ -851,8 +852,8 @@ async function boot(){
   normalize(CFG);
   render();
 
-  // brouillon local non exporté ?
-  const draftRaw = localStorage.getItem(DRAFT_KEY);
+  // brouillon local non exporté pour CE jeu uniquement ?
+  const draftRaw = localStorage.getItem(draftKey());
   if(draftRaw){
     try{
       const d = JSON.parse(draftRaw);
@@ -874,7 +875,7 @@ function showRestoreBanner(d){
      </div>`;
 }
 function restoreDraft(){
-  const d = JSON.parse(localStorage.getItem(DRAFT_KEY));
+  const d = JSON.parse(localStorage.getItem(draftKey()));
   CFG = clone(d.config); normalize(CFG); sel=0; render();
   dismissBanner(); toast("Brouillon restauré");
 }
@@ -901,7 +902,7 @@ function markDirty(){
 }
 function saveDraft(){
   try{
-    localStorage.setItem(DRAFT_KEY, JSON.stringify({savedAt:Date.now(),config:CFG}));
+    localStorage.setItem(draftKey(), JSON.stringify({savedAt:Date.now(),config:CFG}));
     setSave("brouillon enregistré", true);
   }catch(e){ setSave("sauvegarde locale impossible", false); }
 }
@@ -926,6 +927,7 @@ function render(){
   syncTopbar();
   renderSidebar();
   renderEditor();
+  if (typeof refreshRepoBtn === 'function') refreshRepoBtn();
 }
 
 function actIndexForEnigma(i){
@@ -1250,7 +1252,8 @@ function importConfig(ev){
 const REPO_KEY = "escape_admin_repo";
 const DEFAULT_GAMES_PATH = "escape-engine/games";   // chemin des configs dans le repo
 function currentSlug(){
-  // déduit du paramètre ?config=<slug>/config.json
+  // priorité : identité du jeu chargé (tamponnée = nom de dossier) > paramètre d'URL
+  if (typeof CFG !== 'undefined' && CFG && CFG.meta && CFG.meta.id) return CFG.meta.id;
   const p = new URLSearchParams(location.search).get('config') || '';
   const m = p.match(/^([\w.-]+)\/config\.json$/);
   return m ? m[1] : '';
