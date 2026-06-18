@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "themes": [
+    {
+      "id": "1986-cyber",
+      "name": "1986 / Cyber",
+      "colors": {
+        "bg": "#0a0a0f",
+        "card": "#1a1a28",
+        "border": "#2a2a3a",
+        "text": "#e0e8f0",
+        "dim": "#667788",
+        "accent": "#00f0ff",
+        "hint": "#ffd700",
+        "ok": "#00ff88",
+        "danger": "#ff3366"
+      },
+      "fonts": {
+        "display": "'Orbitron', sans-serif",
+        "body": "'Rajdhani', system-ui, sans-serif",
+        "mono": "'Share Tech Mono', ui-monospace, monospace"
+      },
+      "radius": 12,
+      "glow": true
+    },
+    {
+      "id": "mariage",
+      "name": "Mariage",
+      "colors": {
+        "bg": "#fdf6f0",
+        "card": "#ffffff",
+        "border": "#ecdcd6",
+        "text": "#3a2e2e",
+        "dim": "#9b8b85",
+        "accent": "#d98aa0",
+        "hint": "#c9a227",
+        "ok": "#6bbf8a",
+        "danger": "#e06a6a"
+      },
+      "fonts": {
+        "display": "'Playfair Display', Georgia, serif",
+        "body": "'Poppins', system-ui, sans-serif",
+        "mono": "ui-monospace, Menlo, Consolas, monospace"
+      },
+      "radius": 18,
+      "glow": false
+    },
+    {
+      "id": "entreprise",
+      "name": "Entreprise",
+      "colors": {
+        "bg": "#0f1620",
+        "card": "#16202c",
+        "border": "#243443",
+        "text": "#e8eef5",
+        "dim": "#8aa0b5",
+        "accent": "#3d9be0",
+        "hint": "#e0a93d",
+        "ok": "#3dd9a0",
+        "danger": "#e06a6a"
+      },
+      "fonts": {
+        "display": "'Poppins', system-ui, sans-serif",
+        "body": "'Inter', system-ui, sans-serif",
+        "mono": "'Space Mono', ui-monospace, monospace"
+      },
+      "radius": 8,
+      "glow": false
+    },
+    {
+      "id": "anniversaire",
+      "name": "Anniversaire",
+      "colors": {
+        "bg": "#140a1a",
+        "card": "#1f1030",
+        "border": "#34204a",
+        "text": "#f5e9ff",
+        "dim": "#b59ac9",
+        "accent": "#ff3d7f",
+        "hint": "#ffd23d",
+        "ok": "#3dff9e",
+        "danger": "#ff5050"
+      },
+      "fonts": {
+        "display": "'Bebas Neue', system-ui, sans-serif",
+        "body": "'Poppins', system-ui, sans-serif",
+        "mono": "'Space Mono', ui-monospace, monospace"
+      },
+      "radius": 16,
+      "glow": true
+    },
+    {
+      "id": "aventure-foret",
+      "name": "Aventure / Forêt",
+      "colors": {
+        "bg": "#0c140f",
+        "card": "#14201a",
+        "border": "#243a2e",
+        "text": "#e9f5ec",
+        "dim": "#8ab59a",
+        "accent": "#4fd98a",
+        "hint": "#e0c03d",
+        "ok": "#4fd98a",
+        "danger": "#e0703d"
+      },
+      "fonts": {
+        "display": "'Playfair Display', Georgia, serif",
+        "body": "'Inter', system-ui, sans-serif",
+        "mono": "ui-monospace, Menlo, Consolas, monospace"
+      },
+      "radius": 12,
+      "glow": false
+    }
+  ]
+}
