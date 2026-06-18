@@ -10,7 +10,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/avatar.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/avatar.png">
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&family=Playfair+Display:wght@600;700&family=Bebas+Neue&family=Caveat:wght@600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
@@ -29,6 +29,7 @@
   --gold: #ffd700;
   --text: #e0e8f0;
   --text-dim: #667788;
+  --border: #2a2a3a;
   --font-mono: 'Share Tech Mono', monospace;
   --font-display: 'Orbitron', sans-serif;
   --font-body: 'Rajdhani', sans-serif;
@@ -194,7 +195,7 @@ html, body {
   display: flex; align-items: center; gap: 8px;
 }
 .act-title .act-line { flex: 1; height: 1px; background: linear-gradient(90deg, var(--text-dim), transparent); }
-.act-title.locked { color: #333; }
+.act-title.locked { color: var(--border); }
 .act-title.completed { color: var(--success); }
 
 .act-cards {
@@ -205,7 +206,7 @@ html, body {
 
 .enigma-card {
   background: var(--bg-card);
-  border: 1px solid #222233; border-radius: 12px;
+  border: 1px solid var(--border); border-radius: 12px;
   min-height: 60px;
   padding: 5px 5px; margin-bottom: 8px;
   display: flex; align-items: center; gap: 5px;
@@ -241,7 +242,7 @@ html, body {
 }
 .enigma-title-text { font-size: .9rem; font-weight: 500; color: var(--text); }
 .enigma-card.locked .enigma-title-text { color: #444; }
-.enigma-card.locked .enigma-type { color: #333; }
+.enigma-card.locked .enigma-type { color: var(--border); }
 .enigma-arrow { font-size: 1rem; color: var(--text-dim); }
 .enigma-card.current .enigma-arrow { color: var(--accent); }
 .enigma-card.completed .enigma-arrow { color: var(--success); }
@@ -254,7 +255,7 @@ html, body {
   border-bottom: 1px solid #1a1a2a; flex-shrink: 0;
 }
 .back-btn {
-  background: none; border: 1px solid #333;
+  background: none; border: 1px solid var(--border);
   color: var(--text-dim);
   width: 36px; height: 36px; border-radius: 8px;
   font-size: 1.1rem; cursor: pointer;
@@ -317,7 +318,7 @@ html, body {
 .answer-input-wrap { display: flex; gap: 8px; }
 .answer-input {
   flex: 1; background: var(--bg-card);
-  border: 1px solid #333; color: var(--text);
+  border: 1px solid var(--border); color: var(--text);
   font-family: var(--font-body); font-size: 1rem;
   padding: 14px 16px; border-radius: 10px; outline: none;
   transition: border-color .3s;
@@ -344,14 +345,14 @@ html, body {
 .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 280px; margin: 0 auto; }
 .keypad-display {
   grid-column: 1/-1; background: var(--bg-panel);
-  border: 1px solid #333; border-radius: 10px;
+  border: 1px solid var(--border); border-radius: 10px;
   padding: 16px; font-family: var(--font-display);
   font-size: 2rem; letter-spacing: 12px;
   text-align: center; color: var(--accent);
   min-height: 60px; display: flex; align-items: center; justify-content: center;
 }
 .keypad-display .digit { display: inline-block; width: 24px; text-align: center; }
-.keypad-display .digit.empty { border-bottom: 2px solid #333; margin: 0 4px; }
+.keypad-display .digit.empty { border-bottom: 2px solid var(--border); margin: 0 4px; }
 .key-btn {
   background: var(--bg-card); border: 1px solid #2a2a3a;
   color: var(--text); font-family: var(--font-display);
@@ -377,7 +378,7 @@ html, body {
   font-weight: 700; color: var(--accent); border: 1px solid #2a2a3a;
 }
 .puzzle-piece:active { transform: scale(.9); cursor: grabbing; }
-.puzzle-piece.empty { background: transparent; border: 1px dashed #333; cursor: default; }
+.puzzle-piece.empty { background: transparent; border: 1px dashed var(--border); cursor: default; }
 .puzzle-piece.correct { background: var(--success-dim); color: var(--success); border-color: var(--success-dim); }
 
 /* ═══════════ TORCH ═══════════ */
@@ -388,7 +389,7 @@ html, body {
 }
 .torch-zone {
   width: 180px; height: 180px;
-  border: 2px solid #333;
+  border: 2px solid var(--border);
   border-radius: 50%;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
@@ -504,7 +505,7 @@ html, body {
 }
 .gps-map-overlay .ring-overlay {
   position: absolute; border-radius: 50%;
-  border: 1px solid #00f0ff12;
+  border: 1px solid var(--accent)12;
   top: 50%; left: 50%; transform: translate(-50%,-50%);
 }
 .gps-map-overlay .ring-overlay:nth-child(4) { width: 33%; height: 33%; }
@@ -682,7 +683,7 @@ html, body {
   font-size: .6rem; font-weight: 600;
   letter-spacing: 1px; padding: 10px 16px;
   border-radius: 8px; cursor: pointer;
-  border: 1px solid #333;
+  border: 1px solid var(--border);
   background: var(--bg-card);
   color: var(--text-dim);
   transition: all .25s ease;
@@ -720,7 +721,7 @@ html, body {
   color: #6688ff;
 }
 .camera-flip {
-  background: var(--bg-card); border: 1px solid #333;
+  background: var(--bg-card); border: 1px solid var(--border);
   color: var(--text-dim); font-size: 1.1rem;
   width: 42px; height: 42px; border-radius: 8px;
   cursor: pointer; display: flex;
@@ -828,7 +829,7 @@ html, body {
 .btn-primary:active { transform: scale(.95); }
 .btn-ghost {
   background: transparent; color: var(--text-dim);
-  border: 1px solid #333; font-family: var(--font-mono);
+  border: 1px solid var(--border); font-family: var(--font-mono);
   font-size: .65rem; padding: 10px 20px; border-radius: 8px;
   cursor: pointer; letter-spacing: 1px;
 }

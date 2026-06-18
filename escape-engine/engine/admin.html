@@ -97,6 +97,8 @@
   .field{margin-bottom:16px}
   .field > label{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:6px}
   .field .help{font-size:.68rem;color:var(--faint);margin-top:5px;line-height:1.45}
+  .theme-sw{display:flex;gap:4px;margin-top:9px}
+  .theme-sw i{width:26px;height:26px;border-radius:6px;border:1px solid var(--border)}
   .inp,.ta,.sel{width:100%;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px 12px;transition:.15s;resize:vertical}
   .inp:focus,.ta:focus,.sel:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
   .ta{min-height:84px;line-height:1.5;font-family:var(--mono);font-size:12.5px}
@@ -829,13 +831,19 @@ const FORMAT_LABEL = Object.fromEntries(FORMATS.map(f=>[f.v,f.l]));
 const DRAFT_PREFIX = "escape_admin_draft:";
 function draftKey(){ return DRAFT_PREFIX + (currentSlug() || "new"); }
 
-let CFG = null;
-let view = "enigmas";
+let CFG = null;let view = "enigmas";
 let sel = 0;            // index énigme sélectionnée
 let dirtySinceExport = false;
 let configFileName = "config.json";   // nom du fichier à (ré)exporter
+let THEME_LIB = [];    // bibliothèque de thèmes (rempli au build, ou via themes.json)
 
 // ════════════ CHARGEMENT ════════════
+async function loadThemes(){
+  try{
+    const r = await fetch('./themes.json',{cache:'no-cache'});
+    if(r.ok){ const lib=await r.json(); if(Array.isArray(lib.themes)) THEME_LIB=lib.themes; }
+  }catch(e){}
+}
 function configFileFromURL(){
   // Permet ?config=projet-1986/config.json — sous-dossier autorisé, pas de remontée (..).
   const p = new URLSearchParams(location.search).get('config');
@@ -843,6 +851,7 @@ function configFileFromURL(){
   return './config.json';
 }
 async function boot(){
+  await loadThemes();
   let live = null;
   try{
     const r = await fetch(configFileFromURL(),{cache:'no-cache'});
@@ -1005,6 +1014,9 @@ function tplProject(){
     </div>
     ${inp('Note','meta.note',m.note||'')}
   </fieldset>
+  <fieldset class="box"><legend>Thème visuel</legend>
+    ${tplThemeSelect()}
+  </fieldset>
   <fieldset class="box"><legend>Écran d'accueil (branding)</legend>
     ${inp('Titre de l\'onglet','branding.docTitle',b.docTitle||'')}
     ${inp('Logo (texte)','branding.logo',b.logo||'')}
@@ -1015,6 +1027,18 @@ function tplProject(){
     </div>
     ${inp('Avatar (chemin image)','branding.avatar',b.avatar||'','Ex : icons/avatar.png')}
   </fieldset>`;
+}
+function tplThemeSelect(){
+  const cur=CFG.theme||'';
+  const opts=`<option value="">— thème par défaut —</option>`+
+    THEME_LIB.map(t=>`<option value="${t.id}" ${t.id===cur?'selected':''}>${esc(t.name)}</option>`).join('');
+  const t=THEME_LIB.find(x=>x.id===cur);
+  const sw = t ? `<div class="theme-sw">${['bg','card','accent','text','hint'].map(k=>`<i style="background:${t.colors[k]}"></i>`).join('')}</div>` : '';
+  const note = THEME_LIB.length ? '' : '<div class="help">Aucun thème chargé (themes.json introuvable). Le jeu utilisera le thème par défaut.</div>';
+  return `<div class="field"><label>Thème appliqué à ce jeu</label>
+    <select class="sel" onchange="onInput('theme',this.value,false); render();">${opts}</select>
+    ${sw}
+    <div class="help">Géré dans la bibliothèque de thèmes. Le rendu réel s'applique à la génération du jeu.</div>${note}</div>`;
 }
 
 function tplActs(){
