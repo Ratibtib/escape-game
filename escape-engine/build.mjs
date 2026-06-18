@@ -51,13 +51,24 @@ function injectEmbeddedConfig(engineHtml, config) {
 }
 
 function injectAdminConfig(adminHtml, config) {
-  // Pré-charge l'admin avec la config du jeu (fallback si fetch échoue).
+  // Pré-charge l'admin avec une config (ici un modèle vierge pour l'admin racine).
   const marker = 'const DEFAULT_CONFIG = ';
   const start = adminHtml.indexOf(marker);
   const fmt = adminHtml.indexOf('const FORMATS');
   if (start === -1 || fmt === -1) return adminHtml;
-  const semi = adminHtml.lastIndexOf(';', fmt);  // le ; qui clôt DEFAULT_CONFIG
+  const semi = adminHtml.lastIndexOf(';', fmt);
   return adminHtml.slice(0, start + marker.length) + JSON.stringify(config) + adminHtml.slice(semi);
+}
+function blankTemplate() {
+  const now = new Date().toISOString();
+  return {
+    schemaVersion: 1,
+    meta: { id: '', name: 'Nouveau jeu', client: '', note: '', version: 1, createdAt: now, updatedAt: now },
+    branding: { docTitle: 'Nouveau jeu', logo: 'NOUVEAU', subtitle: 'Système de réactivation', codename: '/// NOUVEAU ///', classified: '/// CONFIDENTIEL ///', avatar: 'icons/avatar.png' },
+    actBoundaries: [0, 0],
+    acts: [],
+    enigmas: [],
+  };
 }
 
 function buildManifest(config) {
@@ -103,13 +114,14 @@ function buildGame(slug) {
   const cfgPath = join(ROOT, 'games', slug, 'config.json');
   if (!existsSync(cfgPath)) return null;
   const config = JSON.parse(readFileSync(cfgPath, 'utf8'));
+  // L'identité du jeu = le nom de son dossier (garantit la cohérence éditeur ↔ dossier)
+  config.meta = config.meta || {};
+  config.meta.id = slug;
   const destDir = join(OUT, slug);
   mkdirSync(destDir, { recursive: true });
 
   // index.html (moteur + fallback = config du jeu)
   writeFileSync(join(destDir, 'index.html'), injectEmbeddedConfig(ENGINE, config));
-  // admin.html (éditeur pré-chargé sur ce jeu)
-  writeFileSync(join(destDir, 'admin.html'), injectAdminConfig(ADMIN, config));
   // config.json
   writeFileSync(join(destDir, 'config.json'), JSON.stringify(config, null, 2));
   // manifest.json
@@ -141,7 +153,7 @@ function landingPage(games) {
       <div class="meta">${g.enigmas} énigmes</div>
       <div class="links">
         <a class="go" href="./${g.slug}/">Ouvrir le jeu →</a>
-        <a class="edit" href="./${g.slug}/admin.html">✎ Éditer</a>
+        <a class="edit" href="./admin.html?config=${g.slug}/config.json">✎ Éditer</a>
       </div>
     </div>`).join('');
   return `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
@@ -178,6 +190,8 @@ for (const slug of slugs) {
   if (r) { built.push(r); console.log(`  ✓ ${slug.padEnd(16)} "${r.name}" — ${r.enigmas} énigmes → docs/${slug}/`); }
 }
 writeFileSync(join(OUT, 'index.html'), landingPage(built));
+// Une seule page admin à la racine (modèle vierge ; charge un jeu via ?config=slug/config.json)
+writeFileSync(join(OUT, 'admin.html'), injectAdminConfig(ADMIN, blankTemplate()));
 // .nojekyll pour que GitHub Pages serve tout tel quel
 writeFileSync(join(OUT, '.nojekyll'), '');
 console.log(`\n✅ ${built.length} jeu(x) → docs/  (publier le dossier docs/ sur GitHub Pages)`);
