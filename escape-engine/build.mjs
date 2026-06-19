@@ -195,6 +195,7 @@ function landingPage(games) {
       </div>
     </div>`).join('');
   return `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
+  <meta name="google-site-verification" content="FuUb2828EcDHLHOd8bGgpu84on7gt4ijBAUDdMA6SOY" />
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Escape Engine — Catalogue</title><style>
 :root{--bg:#0a0a0f;--card:#15151f;--border:#262635;--text:#e9e9f2;--dim:#8a8aa0;--accent:#00e0d0;--mono:ui-monospace,Menlo,monospace}
