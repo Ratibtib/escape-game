@@ -920,8 +920,8 @@ html, body {
   <div id="boot-log"></div>
   <div id="boot-buttons" style="display:none; text-align:center; animation: fadeInUp .6s ease;">
     <button class="btn-primary" id="btn-install" onclick="installPWA()" style="display:none;">
-      📲 INSTALLER L'APP
-    </button>
+  📲 Ajouter le jeu à l'écran d'accueil
+</button>
     <div id="install-hint" style="display:none; font-family:var(--font-mono); font-size:.55rem; color:var(--text-dim); margin-top:10px; line-height:1.6; max-width:280px; margin-left:auto; margin-right:auto;"></div>
     <button class="btn-ghost" id="btn-skip" onclick="skipInstall()" style="display:none; margin-top:14px;">
       CONTINUER SANS INSTALLER ›
@@ -1748,9 +1748,9 @@ function showScreen(id) {
 const bootLines = [
   { text: "Initialisation du système...", cls: "ok", delay: 400 },
   { text: "Chargement module PROJET_1986", cls: "ok", delay: 600 },
-  { text: "Vérification profil agent", cls: "ok", delay: 800 },
-  { text: "Connexion base de données", cls: "ok", delay: 500 },
-  { text: "Scan biométrique", cls: "warn", delay: 700 },
+  { text: "Décryptage du dossier 1986", cls: "ok", delay: 800 },
+  { text: "Vérification des données", cls: "ok", delay: 500 },
+  { text: "Activation du scénario", cls: "warn", delay: 700 },
   { text: `Calibration énigmes [${TOTAL}/${TOTAL}]`, cls: "ok", delay: 600 },
   { text: "Chargement module GUADELOUPE", cls: "ok", delay: 400 },
   { text: "Activation protocole ANNIVERSAIRE", cls: "ok", delay: 500 },
@@ -2442,11 +2442,12 @@ function renderAudioPlayer(container, idx) {
     </div>
   ` : '';
 
-  const downloadHtml = hasDownload ? `
-    <div class="audio-download" style="margin-top:8px">
-      <a href="TON_LIEN_ICI" download>⬇️</a>
-    </div>
-  ` : '';
+  const downloadHtml = '';
+  //const downloadHtml = hasDownload ? `
+    //<div class="audio-download" style="margin-top:8px">
+      //<a href="TON_LIEN_ICI" download>⬇️</a>
+    //</div>
+  //` : '';
 
   player.innerHTML = `
     ${barsHtml}
