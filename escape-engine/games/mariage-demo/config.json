@@ -7,7 +7,7 @@
     "note": "Version mariage — 16 énigmes",
     "version": 1,
     "createdAt": "2026-06-17T09:50:30.589Z",
-    "updatedAt": "2026-06-17T09:50:30.589Z"
+    "updatedAt": "2026-06-19T13:21:57.970Z"
   },
   "branding": {
     "docTitle": "QUÊTE DES MARIÉS",
@@ -250,5 +250,6 @@
       "hint": "Approchez-vous du point cible... le radar vous guide !",
       "title": "Signal Localisé"
     }
-  ]
+  ],
+  "theme": "mariage"
 }
